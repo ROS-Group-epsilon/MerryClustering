@@ -22,8 +22,12 @@
 
 	Kevin -- Point Cloud Library
 
-	Rick -- Gribber
+	Rick -- Gripper
 
 # Log
 
 	11/16 Group Established
+
+	11/17 build repo
+
+	11/18
