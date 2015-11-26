@@ -35,5 +35,7 @@
 	11/17 build repo
 
 	11/18 Group meeting, 1st time
+	
+	11/23 Gripper & PCL 1st Edition Merged
 
 		
