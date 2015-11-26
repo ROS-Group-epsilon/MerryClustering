@@ -2,7 +2,7 @@
 <package>
   <name>merry_gripper</name>
   <version>0.0.0</version>
-  <description>merry_gripper</description>
+  <description>Opens and closes gripper</description>
   
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->

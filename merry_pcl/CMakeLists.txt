@@ -20,7 +20,7 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
 # Libraries
- cs_add_library(block_sorter_lib src/block_sorter.cpp)   
+cs_add_library(block_sorter_lib src/block_sorter.cpp)   
 
 # Executables
 # cs_add_executable(example src/example.cpp)

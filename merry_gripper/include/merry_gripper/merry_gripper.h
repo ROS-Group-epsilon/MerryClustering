@@ -1,13 +1,13 @@
-#ifndef GRIPPER_CONTROL_H
-#define GRIPPER_CONTROL_H
+#ifndef MERRY_GRIPPER_H
+#define MERRY_GRIPPER_H
 
 #include <ros/ros.h>
 #include <std_msgs/Int16.h>
 #include <math.h>
 
-class gripper_control{
+class merry_gripper{
 public:
-	gripper_control(ros::NodeHandle* nodehandle);
+	merry_gripper(ros::NodeHandle* nodehandle);
 	void open();
 	void close();
 private:
