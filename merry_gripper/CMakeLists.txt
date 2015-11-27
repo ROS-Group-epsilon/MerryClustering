@@ -15,8 +15,10 @@ catkin_simple()
 cs_add_library(merry_gripper src/merry_gripper.cpp)
 
 # Executables
+cs_add_executable(merry_gripper_main src/merry_gripper_main.cpp)
 
 # target_link_library(example my_lib)
+target_link_libraries(merry_gripper_main merry_gripper ${catkin_LIBRARIES})
 
 cs_install()
 cs_export()

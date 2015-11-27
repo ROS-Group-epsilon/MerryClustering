@@ -5,11 +5,12 @@
 #include <std_msgs/Int16.h>
 #include <math.h>
 
-class merry_gripper{
+class MerryGripper {
 public:
-	merry_gripper(ros::NodeHandle* nodehandle);
+	MerryGripper(ros::NodeHandle* nodehandle);
 	void open();
 	void close();
+
 private:
 	ros::NodeHandle nh_;
 	ros::Publisher  gripPub_;
