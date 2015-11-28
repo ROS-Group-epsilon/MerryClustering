@@ -2,21 +2,19 @@
 
 what_my_block identify_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
 	
-	float xdirc = 0;
-	float ydirc = 0;
-	float xydirc = 0;
-	float z_direction_z = -DBL_MAX;
+	float block_height = -DBL_MAX;
+	float color_checker = DBL_MAX;
 	int npts = inputCloud->width * inputCloud->height;
-	pcl::PointXYZRGB pointpoint;
+	pcl::PointXYZRGB so_many_points;
 	
 	// code to determine the height of the top surface of the block //
 	for(int i = 0; i < npts; i++){
-		if(inputCloud->points[i].z > z_direction_z){
-			pointpoint = inputCloud->points[i];
-			z_direction_z = pointpoint.z;
+		if(inputCloud->points[i].z > block_height){
+			so_many_points = inputCloud->points[i];
+			block_height = so_many_points.z;
 		}
 	}
-	ROS_INFO("Block at height %f found.", z_direction_z);
+	ROS_INFO("Block at height %f found.", block_height);
 	// end code to determine the height of the top surface of the block //
 	
 		
@@ -65,20 +63,152 @@ what_my_block identify_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
     ROS_INFO("found %d points with interesting color",npts2_colored);
     avg_color/=npts2_colored;
     ROS_INFO("avg interesting color = %f, %f, %f",avg_color(0),avg_color(1),avg_color(2));
-    return avg_color;
+	
+	//code to try and match found color to a specific color
+	float my_red = pt_color(0);
+	float my_green = pt_color(1);
+	float my_blue = pt_color(2);
+	float ccompare;
+	enum maybe_color{red_block, green_block, blue_block, black_block, white_block, wood_block};
+	maybe_color perceived_color; 
+	
+	float red_color_compare1 = my_red - 1;
+	float red_color_compare2 = my_green - 0;
+	float red_color_compare3 = my_blue - 0;
+	
+	float green_color_compare1 = my_red - 0;
+	float green_color_compare2 = my_green - 1;
+	float green_color_compare3 = my_blue - 0;
+	
+	float blue_color_compare1 = my_red - 0;
+	float blue_color_compare2 = my_green - 0;
+	float blue_color_compare3 = my_blue - 1;
+	
+	float black_color_compare1 = my_red - 0;
+	float black_color_compare2 = my_green - 0;
+	float black_color_compare3 = my_blue - 0;
+	
+	float white_color_compare1 = my_red - 1;
+	float white_color_compare2 = my_green - 1;
+	float white_color_compare3 = my_blue - 1;
+	
+	float wood_color_compare1 = my_red - 1;
+	float wood_color_compare2 = my_green - 1;
+	float wood_color_compare3 = my_blue - 0;
+    
+	ccompare = sqrt((red_color_compare1^2)+(red_color_compare2^2)+(red_color_compare3^2));
+	if(ccompare < color_checker){
+		color_checker = ccompare;
+		perceived_color = red_block;
+		}
+	
+	ccompare = sqrt((green_color_compare1^2)+(green_color_compare2^2)+(green_color_compare3^2));
+	if(ccompare < color_checker){
+		color_checker = ccompare;
+		perceived_color = green_block;
+		}
+	
+	ccompare = sqrt((blue_color_compare1^2)+(blue_color_compare2^2)+(blue_color_compare3^2));
+	if(ccompare < color_checker){
+		color_checker = ccompare;
+		perceived_color = blue_block;
+		}
+	
+	ccompare = sqrt((black_color_compare1^2)+(black_color_compare2^2)+(black_color_compare3^2));
+	if(ccompare < color_checker){
+		color_checker = ccompare;
+		perceived_color = black_block;
+		}
+	
+	ccompare = sqrt((white_color_compare1^2)+(white_color_compare2^2)+(white_color_compare3^2));
+	if(ccompare < color_checker){
+		color_checker = ccompare;
+		perceived_color = white_block;
+		}
+	
+	ccompare = sqrt((wood_color_compare1^2)+(wood_color_compare2^2)+(wood_color_compare3^2));
+	if(ccompare < color_checker){
+		color_checker = ccompare;
+		perceived_color = wood_block;
+		}
+	//code to try and match found color to a specific color
+	
+	return avg_color;
 	}
 	// code to get avg. color
-	
+
 	
 	what_my_block binfo;
 		binfo.centroid  = block_centroid;
 		binfo.r = pt_color(0);
 		binfo.g = pt_color(1);
 		binfo.b = pt_color(2);
-		binfo.top_plane_z = z_direction_z;
-		
-		return binfo;
+		binfo.block_color = perceived_color;
+		binfo.top_plane_z = block_height;
+	
+	return binfo;
 }
+/////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
