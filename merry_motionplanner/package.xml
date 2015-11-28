@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>merry_motion</name>
+  <name>merry_motionplanner</name>
   <version>0.0.0</version>
   <description>The merry_motion package</description>
 
