@@ -36,4 +36,4 @@ example procedures:
 
 		or:
 
-		rostopic pub dynamixel_motor1_cmd std_msgs/Int16 3600  # Under current conditions, the useful range of angle commands is approximately 3000 to 4000. release to grasp
+		rostopic pub dynamixel_motor1_cmd std_msgs/Int16 3600  # Under current conditions, the useful range of angle commands is approximately 3000 to 4000.

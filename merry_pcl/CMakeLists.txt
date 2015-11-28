@@ -22,12 +22,12 @@ cs_add_library(merry_pcl src/merry_pcl.cpp)
 
 # Executables
 # cs_add_executable(example src/example.cpp)
-# target_link_library(example my_lib)
 cs_add_executable(merry_pcl_test src/merry_pcl_test.cpp)
 cs_add_executable(merry_pcl_main src/merry_pcl_main.cpp)
 cs_add_executable(merry_pcl_color_test src/merry_pcl_color_test.cpp)
 #cs_add_executable(merry_pcl_color_test2 src/merry_pcl_color_test2.cpp)
 
+# target_link_library(example my_lib)
 target_link_libraries(merry_pcl_test merry_pcl ${catkin_LIBRARIES})
 target_link_libraries(merry_pcl_main cwru_pcl_utils ${catkin_LIBRARIES})
 target_link_libraries(merry_pcl_color_test cwru_pcl_utils ${catkin_LIBRARIES})

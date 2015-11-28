@@ -12,7 +12,7 @@ catkin_simple()
 # SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
 # Libraries
-cs_add_library(merry_gripper src/merry_gripper.cpp)
+cs_add_library(merry_gripper src/merry_gripper.cpp)   
 
 # Executables
 cs_add_executable(merry_gripper_main src/merry_gripper_main.cpp)

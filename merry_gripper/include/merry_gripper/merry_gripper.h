@@ -8,13 +8,15 @@
 class MerryGripper {
 public:
 	MerryGripper(ros::NodeHandle* nodehandle);
-	void open();
-	void close();
+	void grasp();
+	void release();
+	void grasp_and_release();
 
 private:
 	ros::NodeHandle nh_;
-	ros::Publisher  gripPub_;
-	
+	ros::Publisher dyn_pub_;
+
+	void initialize_motor();
 };
 
 #endif
