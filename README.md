@@ -38,4 +38,8 @@
 	
 	11/23 Gripper & PCL 1st Edition Merged
 
+	11/26 Tested merry_gripper in real baxter
+
+	11/28 Color_sorter 2nd edition
+
 		
