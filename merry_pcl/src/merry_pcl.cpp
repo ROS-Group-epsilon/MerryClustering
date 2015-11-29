@@ -4,6 +4,7 @@ MerryPcl::MerryPcl(ros::NodeHandle* nodehandle) :
         nh_(*nodehandle),
         cwru_pcl_utils(nodehandle) {
     // to do or not to do
+    //cwru_pcl_utils = new CwruPclUtils(nodehandle);
 }
 
 void CwruPclUtils::initializeSubscribers() {
@@ -48,6 +49,30 @@ void MerryPcl::read_points_color() {
                   << " " << (int) cloud->points[i].g
                   << " " << (int) cloud->points[i].b << std::endl;
     }
+}
+
+pcl::PointCloud<pcl::PointXYZ>::Ptr MerryPcl::import_point_cloud() {
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+
+    while (pcl::io::loadPCDFile<pcl::PointXYZ> ("kinect_clr_snapshot.pcd", *cloud) == -1) { //* load the file
+        PCL_ERROR ("Couldn't read file kinect_clr_snapshot.pcd \n");
+    }
+}
+
+Eigen::Vector3f MerryPcl::compute_centroid(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud) {
+
+    Eigen::Vector3f centroid;
+    // here's a handy way to initialize data to all zeros; more variants exist
+    centroid = Eigen::MatrixXf::Zero(3, 1); // see http://eigen.tuxfamily.org/dox/AsciiQuickReference.txt
+    //add all the points together:
+    int npts = cloud->points.size(); // number of points = number of columns in matrix; check the size
+    //cout<<"matrix has ncols = "<<npts<<endl;
+    for (int ipt = 0; ipt < npts; ipt++) {
+        centroid += cloud->points[ipt].getVector3fMap(); //add all the column vectors together
+    }
+    centroid /= npts; //divide by the number of points to get the centroid
+
+    return centroid;
 }
 
 void MerryPcl::select_patch() {
