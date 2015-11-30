@@ -17,10 +17,12 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 cs_add_library(merry_motionplanner src/merry_motionplanner.cpp)   
 
 # Executables
-cs_add_executable(merry_motionplanner_main src/merry_motionplanner_main.cpp)
+cs_add_executable(merry_motionplanner_test1 src/merry_motionplanner_test1.cpp)
+cs_add_executable(merry_motionplanner_test2 src/merry_motionplanner_test2.cpp)
 
 # target_link_library(example my_lib)
-target_link_libraries(merry_motionplanner_main merry_motionplanner ${catkin_LIBRARIES})
+target_link_libraries(merry_motionplanner_test1 merry_motionplanner ${catkin_LIBRARIES})
+target_link_libraries(merry_motionplanner_test2 merry_motionplanner ${catkin_LIBRARIES})
 
 cs_install()
 cs_export()
