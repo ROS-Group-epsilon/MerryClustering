@@ -1,3 +1,4 @@
+#include <merry_gripper/merry_gripper.h>
 #include <merry_motionplanner/merry_motionplanner.h>
 #include <cwru_pcl_utils/cwru_pcl_utils.h>
 
@@ -5,6 +6,7 @@ int main(int argc, char** argv) {
 	ros::init(argc, argv, "merry_motionplanner_action_client");
 	ros::NodeHandle nh;
 
+	MerryGripper gripper(&nh);
 	MerryMotionplanner motionplanner(&nh);
 	CwruPclUtils cwru_pcl_utils(&nh);
 
@@ -50,42 +52,83 @@ int main(int argc, char** argv) {
 
 	// send a command to plan a joint space move to predefined pose and then execute that plan
 	rtn_val = motionplanner.plan_move_to_pre_pose();
-	rtn_val = motionplanner.rt_arm_execute_planned_path();
+	if(rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
+		rtn_val = motionplanner.rt_arm_execute_planned_path();
+	}
 
 	while(ros::ok()) {
-		/*
-		if found block{
-			get pointcloud containing the plane at the top of the block (find plane_normal and plane_dist for the plane)
-			from this, get major axis and centroid of plane (use cwru_pcl_utils fxns)
-			construct a goal affine pose from this (see sample code for how to do this)
-			convert the affine back into a geometry_msgs::PoseStamped
-			send motion plan request from current to goal
-			if (rtn_val = SUCCESS){
+		// TODO CHANGE THIS IF STATEMENT CONDITION TO BE IF BLOCK HAS BEEN FOUND
+		if(true) {
+			ROS_INFO("block has been found");
+
+			for(int i = 0; i < 3; i++) {
+				origin_des[i] = centroid[i];
+				zvec_des[i] = -plane_normal[i]; // want tool to point opposite to surface normal
+				xvec_des[i] = major_axis[i];
+			}
+
+			origin_des[2] += 0.02; // raise up hand by 2cm
+
+			yvec_des = zvec_des.cross(xvec_des); // construct consistent right-hand triad
+
+			Rmat.col(0) = xvec_des;
+			Rmat.col(1) = yvec_des;
+			Rmat.col(2) = zvec_des;
+			Affine_des_gripper.linear() = Rmat;
+			Affine_des_gripper.translation() = origin_des;
+
+			rt_tool_pose.pose = motionplanner.transformEigenAffine3dToPose(Affine_des_gripper);
+
+			rtn_val = motionplanner.rt_arm_plan_path_current_to_goal_pose(rt_tool_pose);
+			if(rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
+				rtn_val = motionplanner.rt_arm_execute_planned_path();
+			} else {
+				ROS_WARN("Cartesian path to desired pose is not achievable.");
+				return 0;
+			}
+
+			gripper.grasp();
+
+			/*
+			if(color = _____) {
+				//get these numbers from my_interesting_moves code
+				//hard code in positions for each block
+			} else if() {
+
+			} else if() {
+
+			} else if() {
+
+			} else if() {
+
+			} else if() {
+
+			} else {
+				ROS_WARN("color of block could not be determined.");
+				return 0;
+			}
+			*/
+			//go to hard coded position with:
+			/*
+			plan path
+			if rtn_val = SUCCESS{
 				execute motion plan
 			} else {
-				return with error message
+				return
 			}
+			*/
 
-			close gripper on block
-			use case statements to determine color
-			if color = _____ {
-				determine necessary placement of arm for this color and hard code in this position
-				plan path to desired joint angles
-				if rtn_val = SUCCESS{
-					execute motion plan
-				} else {
-					return
-				}
-				open gripper to release block once position has been achieved
+			gripper.release();
+
+			rtn_val = motionplanner.plan_move_to_pre_pose();
+			if(rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
+				rtn_val = motionplanner.rt_arm_execute_planned_path();
 			}
-
-		plan and execute move to pre pose
-		ros::Duration(0.5).sleep();
-		ros::spinOnce();
 		}
 
-		return 0;
-
-		*/
+		ros::Duration(0.5).sleep();
+		ros::spinOnce();
 	}
+
+	return 1;
 }
