@@ -139,17 +139,19 @@ int main(int argc, char** argv) {
 
                 switch(color) {
 
+                    //double des_x = 0.1;
+                    //double des_y = 0.1;
+
                     case 1:
                         move_to_red_blocks();
                         move_to_origin();
 
-                        double des_x = 0.05;
-                        double des_y = 0.05;
 
-                    for(int imove = 0; imove < 10; imove++) {
 
-                        origin_des[0] = origin_des[0]+imove*des_x/10;
-                        origin_des[1] = origin_des[1]+imove*des_y/10;
+                    for(int imove = 0; imove < 50; imove++) {
+
+                        origin_des[0] = origin_des[0]+imove*dx;//des_x/10;
+                        origin_des[1] = origin_des[1]+imove*dy;//des_y/10;
                         Affine_des_gripper.translation() = origin_des;
                         rt_tool_pose.pose = merry_motionplanner.transformEigenAffine3dToPose(Affine_des_gripper);
                         
@@ -163,6 +165,7 @@ int main(int argc, char** argv) {
                             rtn_val = merry_motionplanner.rt_arm_execute_planned_path();
                         }
                         else {
+                            ROS_INFO("it is No.%d step",imove);
                             ROS_WARN("Cartesian path to desired pose not achievable");
                         }
                     
@@ -195,49 +198,7 @@ int main(int argc, char** argv) {
                         move_to_green_blocks();
                         move_to_origin();
                         break;
-                    {
 
-                        origin_des[0] = origin_des[0]-1;
-                        origin_des[1] = origin_des[1]-1;
-                        Affine_des_gripper.translation() = origin_des;
-                        rt_tool_pose.pose = merry_motionplanner.transformEigenAffine3dToPose(Affine_des_gripper);
-                        
-                        // send move plan request:
-                        rtn_val=merry_motionplanner.rt_arm_plan_path_current_to_goal_pose(rt_tool_pose);
-                        // send move plan request:
-                        rtn_val=merry_motionplanner.rt_arm_plan_path_current_to_goal_pose(rt_tool_pose);
-
-                        if (rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS)  { 
-                            //send command to execute planned motion
-                            rtn_val=merry_motionplanner.rt_arm_execute_planned_path();
-                        }
-                        else {
-                            ROS_WARN("Cartesian path to desired pose not achievable");
-                        }
-                    
-                    }
-
-                    {
-
-                        origin_des[0] = origin_des[0]+1;
-                        origin_des[1] = origin_des[1]+1;
-                        Affine_des_gripper.translation() = origin_des;
-                        rt_tool_pose.pose = merry_motionplanner.transformEigenAffine3dToPose(Affine_des_gripper);
-                        
-                        // send move plan request:
-                        rtn_val=merry_motionplanner.rt_arm_plan_path_current_to_goal_pose(rt_tool_pose);
-                        // send move plan request:
-                        rtn_val=merry_motionplanner.rt_arm_plan_path_current_to_goal_pose(rt_tool_pose);
-
-                        if (rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS)  { 
-                            //send command to execute planned motion
-                            rtn_val=merry_motionplanner.rt_arm_execute_planned_path();
-                        }
-                        else {
-                            ROS_WARN("Cartesian path to desired pose not achievable");
-                        }
-                    
-                    }
                     case 3:
                         move_to_blue_blocks();
                         move_to_origin();
