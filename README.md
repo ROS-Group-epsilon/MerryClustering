@@ -42,6 +42,4 @@
 
 	11/28 Color_sorter 2nd edition
 
-VVVVV
-
 		
