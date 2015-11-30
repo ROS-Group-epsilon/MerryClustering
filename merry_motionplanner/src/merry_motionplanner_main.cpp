@@ -61,6 +61,10 @@ int main(int argc, char** argv) {
 		if(true) {
 			ROS_INFO("block has been found");
 
+
+			//ASSUMING THAT I AM RECEIVING A CENTROID, MAJOR AXIS, AND PLANE_NORMAL FROM PCL LIBRARY
+
+
 			for(int i = 0; i < 3; i++) {
 				origin_des[i] = centroid[i];
 				zvec_des[i] = -plane_normal[i]; // want tool to point opposite to surface normal
