@@ -1,6 +1,6 @@
 #include "../include/block_sorter.h"
 
-what_my_block identify_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
+what_my_block block_sorter(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
 	
 	float block_height = -DBL_MAX;
 	float color_checker = DBL_MAX;
@@ -33,14 +33,14 @@ void block_sorter::top_height(){
 // code to determine centroid of block //
 void block_sorter::computes_centroid(){
 	Eigen::Vector3f block_centroid = compute_centroid(rest_of_block);
-	Eigen::Vector3f  compute_centroid(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr) {
+	Eigen::Vector3f compute_centroid(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr) {
     Eigen::Vector3f centroid;
-    //Eigen::Vector3f cloud_pt;   
+    Eigen::Vector3f cloud_pt;   
     int npts = cloud_ptr->points.size();    
     centroid<<0,0,0;
     //add all the points together:
     for (int ipt = 0; ipt < npts; ipt++) {
-        //cloud_pt = input_cloud_ptr->points[ipt].getVector3fMap();
+        cloud_pt = input_cloud_ptr->points[ipt].getVector3fMap();
         centroid += cloud_ptr; //add all the column vectors together
     }
     centroid/= npts; //divide by the number of points to get the centroid

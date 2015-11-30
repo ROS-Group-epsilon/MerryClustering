@@ -18,6 +18,16 @@
 #ifndef PCL_BLOCK_SORTER_H_
 #define PCL_BLOCK_SORTER_H_
 
-//insert code here
+class block_sorter{
+public:
+	block_sorter(ros::NodeHandle* nodehandle);
+	void top_height();
+	void computes_centroid();
+	void find_avg_color();
+	void color_detection();
+private:
+	ros::NodeHandle nh_;
+	ros::Publisher  PCLPub_;
+};
 
 #endif
