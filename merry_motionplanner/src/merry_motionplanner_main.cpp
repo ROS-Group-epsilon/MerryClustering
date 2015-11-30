@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
 	}
 
 	while(ros::ok()) {
-		// TODO CHANGE THIS IF STATEMENT CONDITION TO BE IF BLOCK HAS BEEN FOUND
+		// TODO CHANGE THIS IF STATEMENT CONDITION TO BE IF BLOCK HAS BEEN FOUND AND NO OBSTRUCTION HAS BEEN FOUND
 		if(true) {
 			ROS_INFO("block has been found");
 
