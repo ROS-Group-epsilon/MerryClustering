@@ -142,10 +142,14 @@ int main(int argc, char** argv) {
                     case 1:
                         move_to_red_blocks();
                         move_to_origin();
-                    {
 
-                        origin_des[0] = origin_des[0]+0.05;
-                        origin_des[1] = origin_des[1];
+                        double des_x = 0.05;
+                        double des_y = 0.05;
+
+                    for(int imove = 0; imove < 10; imove++) {
+
+                        origin_des[0] = origin_des[0]+imove*des_x/10;
+                        origin_des[1] = origin_des[1]+imove*des_y/10;
                         Affine_des_gripper.translation() = origin_des;
                         rt_tool_pose.pose = merry_motionplanner.transformEigenAffine3dToPose(Affine_des_gripper);
                         
@@ -164,7 +168,7 @@ int main(int argc, char** argv) {
                     
                     }
 
-                    {
+                    for(int iy = 0; iy < 10; iy++) {
 
                         origin_des[0] = origin_des[0]-0.05;
                         origin_des[1] = origin_des[1];
