@@ -9,6 +9,8 @@ public:
     MerryPcl(ros::NodeHandle* nodehandle); //constructor
     void grasp_kinect_cloud();
     void read_points_color();
+    pcl::PointCloud<pcl::PointXYZ>::Ptr import_point_cloud();
+    Eigen::Vector3f compute_centroid(pcl::PointCloud<pcl::PointXYZ>::Ptr);
     void select_patch();
     void select_colored_patch();
 
