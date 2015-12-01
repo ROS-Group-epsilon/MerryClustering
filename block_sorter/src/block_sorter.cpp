@@ -1,7 +1,12 @@
 #include <block_sorter/block_sorter.h>
 
+BlockSorter::BlockSorter(ros::NodeHandle* nodehandle):
+        nh_(*nodehandle){
+    // initialize ... 
+}
+
 // code to determine the height of the top surface of the block
-float block_sorter::top_height(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
+float BlockSorter::top_height(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
 	float block_height = -DBL_MAX;
 	int npts = inputCloud->width * inputCloud->height;
 	pcl::PointXYZRGB so_many_points;
@@ -17,7 +22,7 @@ float block_sorter::top_height(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud
 
 
 // code to determine centroid of block //
-Eigen::Vector3f block_sorter::computes_centroid(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr){
+Eigen::Vector3f BlockSorter::computes_centroid(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr){
     Eigen::Vector3f cloud_pt;   
     int npts = cloud_ptr->points.size();    
     centroid<<0,0,0;
@@ -31,7 +36,7 @@ Eigen::Vector3f block_sorter::computes_centroid(pcl::PointCloud<pcl::PointXYZ>::
 	}
 
 //code to determine major axis
-Eigen::Vector3f block_sorter::m_axis(Eigen::MatrixXf points_mat){
+Eigen::Vector3f BlockSorter::m_axis(Eigen::MatrixXf points_mat){
 	Eigen::Matrix3f CoVar;
 	Eigen::MatrixXf points_offset_mat = points_mat;
     CoVar = points_offset_mat * (points_offset_mat.transpose()); //3xN matrix times Nx3 matrix is 3x3
@@ -67,7 +72,7 @@ Eigen::Vector3f block_sorter::m_axis(Eigen::MatrixXf points_mat){
 
 
 // code to get avg. color. Comb through kinect colors and compute average color. (Disregard color=0,0,0) 
-Eigen::Vector3d block_sorter::find_avg_color(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pclKinect_clr_ptr_){
+Eigen::Vector3d BlockSorter::find_avg_color(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pclKinect_clr_ptr_){
 	Eigen::Vector3d avg_color;
     Eigen::Vector3d ref_color;
     ref_color<<147,147,147;
@@ -93,7 +98,7 @@ Eigen::Vector3d block_sorter::find_avg_color(pcl::PointCloud<pcl::PointXYZRGB>::
 
 
 //code to try and match found color to a specific color
-int block_sorter::color_detection(Eigen::Vector3d pt_color){
+int BlockSorter::color_detection(Eigen::Vector3d pt_color){
 	float my_red = pt_color(0);
 	float my_green = pt_color(1);
 	float my_blue = pt_color(2);

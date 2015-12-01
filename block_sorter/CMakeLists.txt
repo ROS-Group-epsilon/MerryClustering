@@ -20,18 +20,15 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
 # Libraries
-cs_add_library(block_sorter_lib src/block_sorter.cpp)
+cs_add_library(block_sorter src/block_sorter.cpp)
    
 
 # Executables
 cs_add_executable(block_sorter_main src/block_sorter_main.cpp)
-#cs_add_executable(process_pcl src/process_pcl.cpp)
-#cs_add_executable(process_pcl_v2 src/process_pcl_v2.cpp)
-#cs_add_executable(process_pcd src/process_pcd.cpp)
-#cs_add_executable(process_pcd_dev src/process_pcd_dev.cpp)
-#cs_add_executable(find_can_incomplete src/find_can_incomplete.cpp
+
+
 #target_link_libraries(process_pcl ${PCL_LIBRARIES})
-target_link_libraries(block_sorter_main block_sorter ${PCL_LIBRARIES})
+target_link_libraries(block_sorter_main block_sorter ${catkin_LIBRARIES})
 cs_install()
 cs_export()
     

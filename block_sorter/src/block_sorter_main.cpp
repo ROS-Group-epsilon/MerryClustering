@@ -8,7 +8,7 @@ int main(int argc, char** argv) {
     ros::NodeHandle nh;
     CwruPclUtils cwru_pcl_utils(&nh);
 
-    block_sorter block_sorter_utils;
+    BlockSorter block_sorter_utils(&nh);
 
     while (!cwru_pcl_utils.got_kinect_cloud()) {
         ROS_INFO("did not receive pointcloud");

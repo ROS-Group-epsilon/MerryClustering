@@ -5,12 +5,12 @@ project(merry_hmi)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  [catkin
+  catkin
   pcl_ros
   roscpp
   sensor_msgs
   std_msgs
-  tf]
+  tf
 )
 
 ## System dependencies are found with CMake's conventions
