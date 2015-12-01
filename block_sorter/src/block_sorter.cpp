@@ -1,13 +1,10 @@
-#include "../include/block_sorter.h"
+#include <block_sorter/block_sorter.h>
 
-what_my_block identify_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
-	
+// code to determine the height of the top surface of the block
+float block_sorter::top_height(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
 	float block_height = -DBL_MAX;
-	float color_checker = DBL_MAX;
 	int npts = inputCloud->width * inputCloud->height;
 	pcl::PointXYZRGB so_many_points;
-	
-	// code to determine the height of the top surface of the block //
 	for(int i = 0; i < npts; i++){
 		if(inputCloud->points[i].z > block_height){
 			so_many_points = inputCloud->points[i];
@@ -15,37 +12,64 @@ what_my_block identify_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
 		}
 	}
 	ROS_INFO("Block at height %f found.", block_height);
-	// end code to determine the height of the top surface of the block //
-	
-		
-	// code to determine centroid of block //
-	Eigen::Vector3f block_centroid = compute_centroid(rest_of_block);
-	Eigen::Vector3f  compute_centroid(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr) {
-    Eigen::Vector3f centroid;
-    //Eigen::Vector3f cloud_pt;   
+	return block_height;
+}
+
+
+// code to determine centroid of block //
+Eigen::Vector3f block_sorter::computes_centroid(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr){
+    Eigen::Vector3f cloud_pt;   
     int npts = cloud_ptr->points.size();    
     centroid<<0,0,0;
     //add all the points together:
     for (int ipt = 0; ipt < npts; ipt++) {
-        //cloud_pt = input_cloud_ptr->points[ipt].getVector3fMap();
-        centroid += cloud_ptr; //add all the column vectors together
+        cloud_pt = cloud_ptr->points[ipt].getVector3fMap();
+        centroid += cloud_pt; //add all the column vectors together
     }
     centroid/= npts; //divide by the number of points to get the centroid
     return centroid;
 	}
-    // end code to determine centroid of block //
-	
-	
-	
-	
-	// code to get avg. color
-	// comb through kinect colors and compute average color
-	// disregard color=0,0,0 
-	Eigen::Vector3d find_avg_color() {
-    Eigen::Vector3d avg_color;
-    Eigen::Vector3d pt_color;
+
+//code to determine major axis
+Eigen::Vector3f block_sorter::m_axis(Eigen::MatrixXf points_mat){
+	Eigen::Matrix3f CoVar;
+	Eigen::MatrixXf points_offset_mat = points_mat;
+    CoVar = points_offset_mat * (points_offset_mat.transpose()); //3xN matrix times Nx3 matrix is 3x3
+	Eigen::EigenSolver<Eigen::Matrix3f> es3f(CoVar);
+	Eigen::VectorXf evals;
+	Eigen::Vector3f plane_normal;
+	evals = es3f.eigenvalues().real(); // grab just the real parts
+	double min_lambda = evals[0]; //initialize the hunt for min eval
+	double max_lambda = evals[0]; // and for max eval
+	plane_normal = es3f.eigenvectors().col(0).real(); //complex_vec.real(); //strip off the real part
+	major_axis_ = es3f.eigenvectors().col(0).real(); // starting assumptions 
+    //cout<<"real part: "<<est_plane_normal.transpose()<<endl;
+    //est_plane_normal = es3d.eigenvectors().col(0).real(); // evecs in columns
+    double lambda_test;
+    int i_normal = 0;
+    int i_major_axis=0;
+    //loop through "all" ("both", in this 3-D case) the rest of the solns, seeking min e-val
+    for (int ivec = 1; ivec < 3; ivec++) {
+        lambda_test = evals[ivec];
+        if (lambda_test < min_lambda) {
+            min_lambda = lambda_test;
+            i_normal = ivec; //this index is closer to index of min eval
+            plane_normal = es3f.eigenvectors().col(i_normal).real();
+        }
+        if (lambda_test > max_lambda) {
+            max_lambda = lambda_test;
+            i_major_axis = ivec; //this index is closer to index of min eval
+            major_axis_ = es3f.eigenvectors().col(i_major_axis).real();
+        }
+    	return major_axis_;        
+    }	
+}
+
+
+// code to get avg. color. Comb through kinect colors and compute average color. (Disregard color=0,0,0) 
+Eigen::Vector3d block_sorter::find_avg_color(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pclKinect_clr_ptr_){
+	Eigen::Vector3d avg_color;
     Eigen::Vector3d ref_color;
-    indices_.clear();
     ref_color<<147,147,147;
     int npts2 = pclKinect_clr_ptr_->points.size();
     int npts2_colored = 0;
@@ -57,18 +81,24 @@ what_my_block identify_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
     if ((pt_color-ref_color).norm() > 1) {
         avg_color+= pt_color;
         npts2_colored++;
-        indices_.push_back(i); // save this points as "interesting" color
+        //indices_.push_back(i); // save this points as "interesting" color
     }
     }
     ROS_INFO("found %d points with interesting color",npts2_colored);
     avg_color/=npts2_colored;
     ROS_INFO("avg interesting color = %f, %f, %f",avg_color(0),avg_color(1),avg_color(2));
-	
-	//code to try and match found color to a specific color
+	return avg_color;
+}
+
+
+
+//code to try and match found color to a specific color
+int block_sorter::color_detection(Eigen::Vector3d pt_color){
 	float my_red = pt_color(0);
 	float my_green = pt_color(1);
 	float my_blue = pt_color(2);
 	float ccompare;
+	float color_checker = DBL_MAX;
 	enum maybe_color{red_block, green_block, blue_block, black_block, white_block, wood_block};
 	maybe_color perceived_color; 
 	
@@ -96,62 +126,44 @@ what_my_block identify_block(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
 	float wood_color_compare2 = my_green - 1;
 	float wood_color_compare3 = my_blue - 0;
     
-	ccompare = sqrt((red_color_compare1^2)+(red_color_compare2^2)+(red_color_compare3^2));
+	ccompare = sqrt(pow(red_color_compare1,2)+pow(red_color_compare2,2)+pow(red_color_compare3,2));
 	if(ccompare < color_checker){
 		color_checker = ccompare;
 		perceived_color = red_block;
 		}
 	
-	ccompare = sqrt((green_color_compare1^2)+(green_color_compare2^2)+(green_color_compare3^2));
+	ccompare = sqrt(pow(green_color_compare1,2)+pow(green_color_compare2,2)+pow(green_color_compare3,2));
 	if(ccompare < color_checker){
 		color_checker = ccompare;
 		perceived_color = green_block;
 		}
 	
-	ccompare = sqrt((blue_color_compare1^2)+(blue_color_compare2^2)+(blue_color_compare3^2));
+	ccompare = sqrt(pow(blue_color_compare1,2)+pow(blue_color_compare2,2)+pow(blue_color_compare3,2));
 	if(ccompare < color_checker){
 		color_checker = ccompare;
 		perceived_color = blue_block;
 		}
 	
-	ccompare = sqrt((black_color_compare1^2)+(black_color_compare2^2)+(black_color_compare3^2));
+	ccompare = sqrt(pow(black_color_compare1,2)+pow(black_color_compare2,2)+pow(black_color_compare3,2));
 	if(ccompare < color_checker){
 		color_checker = ccompare;
 		perceived_color = black_block;
 		}
 	
-	ccompare = sqrt((white_color_compare1^2)+(white_color_compare2^2)+(white_color_compare3^2));
+	ccompare = sqrt(pow(white_color_compare1,2)+pow(white_color_compare2,2)+pow(white_color_compare3,2));
 	if(ccompare < color_checker){
 		color_checker = ccompare;
 		perceived_color = white_block;
 		}
 	
-	ccompare = sqrt((wood_color_compare1^2)+(wood_color_compare2^2)+(wood_color_compare3^2));
+	ccompare = sqrt(pow(wood_color_compare1,2)+pow(wood_color_compare2,2)+pow(wood_color_compare3,2));
 	if(ccompare < color_checker){
 		color_checker = ccompare;
 		perceived_color = wood_block;
 		}
-	//code to try and match found color to a specific color
 	
-	return avg_color;
-	}
-	// code to get avg. color
-
-	
-	what_my_block binfo;
-		binfo.centroid  = block_centroid;
-		binfo.r = pt_color(0);
-		binfo.g = pt_color(1);
-		binfo.b = pt_color(2);
-		binfo.block_color = perceived_color;
-		binfo.top_plane_z = block_height;
-	
-	return binfo;
+	return perceived_color;
 }
-/////////////////////////////
-
-
-
 
 
 
