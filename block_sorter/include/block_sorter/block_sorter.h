@@ -31,6 +31,13 @@ private:
 	ros::NodeHandle nh_;
 	Eigen::Vector3d pt_color;
 	Eigen::Vector3f major_axis_,centroid;
+
+	bool isRed(int r, int g, int b, int tolerance);
+	bool isGreen(int r, int g, int b, int tolerance);
+	bool isBlue(int r, int g, int b, int tolerance);
+	bool isBlack(int r, int g, int b, int tolerance);
+	bool isWhite(int r, int g, int b, int tolerance);
+	bool isWoodcolor(int r, int g, int b, int tolerance);
 };
 
 #endif

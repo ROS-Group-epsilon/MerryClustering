@@ -29,13 +29,14 @@ int main(int argc, char** argv) {
         return (-1);
       }
 
-    // for (size_t i = 0; i < cloud->points.size(); ++i){
-    //     Eigen::Vector3d pt_color;
-    //     pt_color[0] = (int) cloud->points[i].r;
-    //     pt_color[1] = (int) cloud->points[i].g;
-    //     pt_color[2] = (int) cloud->points[i].b;
-    //     cout <<  block_sorter_utils.color_detection(pt_color) << endl;
-    // }
+    for (size_t i = 0; i < cloud->points.size(); ++i){
+        Eigen::Vector3d pt_color;
+        pt_color[0] = (int) cloud->points[i].r;
+        pt_color[1] = (int) cloud->points[i].g;
+        pt_color[2] = (int) cloud->points[i].b;
+        int color = block_sorter_utils.color_detection(pt_color);
+        //cout << color << endl;
+    }
 
 
 

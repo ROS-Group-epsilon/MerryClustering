@@ -1,12 +1,14 @@
 #include <block_sorter/block_sorter.h>
 
+enum COLORS { RED, GREEN, BLUE, BLACK, WHITE, WOODCOLOR, NONE };
+
 BlockSorter::BlockSorter(ros::NodeHandle* nodehandle):
         nh_(*nodehandle){
     // initialize ... 
 }
 
 // code to determine the height of the top surface of the block
-float BlockSorter::top_height(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
+float BlockSorter::top_height(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud) {
 	float block_height = -DBL_MAX;
 	int npts = inputCloud->width * inputCloud->height;
 	pcl::PointXYZRGB so_many_points;
@@ -21,8 +23,8 @@ float BlockSorter::top_height(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud)
 }
 
 
-// code to determine centroid of block //
-Eigen::Vector3f BlockSorter::computes_centroid(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr){
+// code to determine centroid of block
+Eigen::Vector3f BlockSorter::computes_centroid(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr) {
     Eigen::Vector3f cloud_pt;   
     int npts = cloud_ptr->points.size();    
     centroid<<0,0,0;
@@ -33,10 +35,10 @@ Eigen::Vector3f BlockSorter::computes_centroid(pcl::PointCloud<pcl::PointXYZ>::P
     }
     centroid/= npts; //divide by the number of points to get the centroid
     return centroid;
-	}
+}
 
 //code to determine major axis
-Eigen::Vector3f BlockSorter::m_axis(Eigen::MatrixXf points_mat){
+Eigen::Vector3f BlockSorter::m_axis(Eigen::MatrixXf points_mat) {
 	Eigen::Matrix3f CoVar;
 	Eigen::MatrixXf points_offset_mat = points_mat;
     CoVar = points_offset_mat * (points_offset_mat.transpose()); //3xN matrix times Nx3 matrix is 3x3
@@ -95,82 +97,105 @@ Eigen::Vector3d BlockSorter::find_avg_color(pcl::PointCloud<pcl::PointXYZRGB>::P
 	return avg_color;
 }
 
-
-
 //code to try and match found color to a specific color
 int BlockSorter::color_detection(Eigen::Vector3d pt_color){
-	float my_red = pt_color(0);
-	float my_green = pt_color(1);
-	float my_blue = pt_color(2);
-	float ccompare;
-	float color_checker = DBL_MAX;
-	enum maybe_color{red_block, green_block, blue_block, black_block, white_block, wood_block};
-	maybe_color perceived_color; 
-	
-	float red_color_compare1 = my_red - 1;
-	float red_color_compare2 = my_green - 0;
-	float red_color_compare3 = my_blue - 0;
-	
-	float green_color_compare1 = my_red - 0;
-	float green_color_compare2 = my_green - 1;
-	float green_color_compare3 = my_blue - 0;
-	
-	float blue_color_compare1 = my_red - 0;
-	float blue_color_compare2 = my_green - 0;
-	float blue_color_compare3 = my_blue - 1;
-	
-	float black_color_compare1 = my_red - 0;
-	float black_color_compare2 = my_green - 0;
-	float black_color_compare3 = my_blue - 0;
-	
-	float white_color_compare1 = my_red - 1;
-	float white_color_compare2 = my_green - 1;
-	float white_color_compare3 = my_blue - 1;
-	
-	float wood_color_compare1 = my_red - 1;
-	float wood_color_compare2 = my_green - 1;
-	float wood_color_compare3 = my_blue - 0;
-    
-	ccompare = sqrt(pow(red_color_compare1,2)+pow(red_color_compare2,2)+pow(red_color_compare3,2));
-	if(ccompare < color_checker){
-		color_checker = ccompare;
-		perceived_color = red_block;
-		}
-	
-	ccompare = sqrt(pow(green_color_compare1,2)+pow(green_color_compare2,2)+pow(green_color_compare3,2));
-	if(ccompare < color_checker){
-		color_checker = ccompare;
-		perceived_color = green_block;
-		}
-	
-	ccompare = sqrt(pow(blue_color_compare1,2)+pow(blue_color_compare2,2)+pow(blue_color_compare3,2));
-	if(ccompare < color_checker){
-		color_checker = ccompare;
-		perceived_color = blue_block;
-		}
-	
-	ccompare = sqrt(pow(black_color_compare1,2)+pow(black_color_compare2,2)+pow(black_color_compare3,2));
-	if(ccompare < color_checker){
-		color_checker = ccompare;
-		perceived_color = black_block;
-		}
-	
-	ccompare = sqrt(pow(white_color_compare1,2)+pow(white_color_compare2,2)+pow(white_color_compare3,2));
-	if(ccompare < color_checker){
-		color_checker = ccompare;
-		perceived_color = white_block;
-		}
-	
-	ccompare = sqrt(pow(wood_color_compare1,2)+pow(wood_color_compare2,2)+pow(wood_color_compare3,2));
-	if(ccompare < color_checker){
-		color_checker = ccompare;
-		perceived_color = wood_block;
-		}
-	
-	return perceived_color;
+    // process the input color message
+	int r = pt_color(0);
+	int g = pt_color(1);
+	int b = pt_color(2);
+    // tolerance
+    int tolerance = 100;
+
+    if(isRed(r,g,b,tolerance)) return RED;
+    if(isGreen(r,g,b,tolerance)) return GREEN;
+    if(isBlue(r,g,b,tolerance)) return BLUE;
+    if(isBlack(r,g,b,tolerance)) return BLACK;
+    if(isWhite(r,g,b,tolerance)) return WHITE;
+    if(isWoodcolor(r,g,b,tolerance)) return WOODCOLOR;
+
+    //ROS_INFO("color undefined");
+    return NONE;
 }
 
 
+bool BlockSorter::isRed(int r, int g, int b, int tolerance) {
+    // standard red rgb code
+    int standard_r = 255;
+    int standard_g = 0;
+    int standard_b = 0;
+
+    if(abs(standard_r - r) < tolerance && abs(standard_g - g) < tolerance && abs(standard_b - b) < tolerance) {
+        ROS_INFO("RED");
+        return true;
+    }
+    return false;
+}
+
+bool BlockSorter::isGreen(int r, int g, int b, int tolerance) {
+    // standard red rgb code
+    int standard_r = 255;
+    int standard_g = 0;
+    int standard_b = 0;
+
+    if(abs(standard_r - r) < tolerance && abs(standard_g - g) < tolerance && abs(standard_b - b) < tolerance) {
+        ROS_INFO("GREEN");
+        return true;
+    }
+    return false;
+}
+
+
+bool BlockSorter::isBlue(int r, int g, int b, int tolerance) {
+    // standard red rgb code
+    int standard_r = 255;
+    int standard_g = 0;
+    int standard_b = 0;
+
+    if(abs(standard_r - r) < tolerance && abs(standard_g - g) < tolerance && abs(standard_b - b) < tolerance) {
+        ROS_INFO("BLUE");
+        return true;
+    }
+    return false;
+}
+
+bool BlockSorter::isBlack(int r, int g, int b, int tolerance) {
+    // standard red rgb code
+    int standard_r = 0;
+    int standard_g = 0;
+    int standard_b = 0;
+
+    if(abs(standard_r - r) < tolerance && abs(standard_g - g) < tolerance && abs(standard_b - b) < tolerance) {
+        ROS_INFO("BLACK");
+        return true;
+    }
+    return false;
+}
+
+bool BlockSorter::isWhite(int r, int g, int b, int tolerance) {
+    // standard red rgb code
+    int standard_r = 255;
+    int standard_g = 255;
+    int standard_b = 255;
+
+    if(abs(standard_r - r) < tolerance && abs(standard_g - g) < tolerance && abs(standard_b - b) < tolerance) {
+        ROS_INFO("WHITE");
+        return true;
+    }
+    return false;
+}
+
+bool BlockSorter::isWoodcolor(int r, int g, int b, int tolerance) {
+    // standard red rgb code
+    int standard_r = 255;
+    int standard_g = 228;
+    int standard_b = 181;
+
+    if(abs(standard_r - r) < tolerance && abs(standard_g - g) < tolerance && abs(standard_b - b) < tolerance) {
+        ROS_INFO("WOODCOLOR");
+        return true;
+    }
+    return false;
+}
 
 
 
