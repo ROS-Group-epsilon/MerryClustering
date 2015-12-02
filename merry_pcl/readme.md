@@ -1,0 +1,7 @@
+## Example usage
+
+		roslaunch cwru_baxter_sim baxter_world.launch
+		roslaunch cwru_baxter_sim kinect_xform.launch
+		rosrun rviz rviz   # and set display to see kinect/depth/points
+
+		rosrun merry_pcl merry_pcl_test2

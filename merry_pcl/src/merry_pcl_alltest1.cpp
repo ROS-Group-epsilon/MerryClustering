@@ -1,4 +1,4 @@
-#include <block_sorter/block_sorter.h>
+#include <merry_pcl/merry_pcl.h>
 #include <cwru_pcl_utils/cwru_pcl_utils.h>
 #include <iostream>
 using namespace std;
@@ -8,7 +8,7 @@ int main(int argc, char** argv) {
     ros::NodeHandle nh;
     CwruPclUtils cwru_pcl_utils(&nh);
 
-    BlockSorter block_sorter_utils(&nh);
+    MerryPcl merry_pcl_utils(&nh);
 
     while (!cwru_pcl_utils.got_kinect_cloud()) {
         ROS_INFO("did not receive pointcloud");
@@ -34,13 +34,9 @@ int main(int argc, char** argv) {
         pt_color[0] = (int) cloud->points[i].r;
         pt_color[1] = (int) cloud->points[i].g;
         pt_color[2] = (int) cloud->points[i].b;
-        int color = block_sorter_utils.color_detection(pt_color);
+        int color = merry_pcl_utils.get_point_color(pt_color);
         //cout << color << endl;
     }
-
-
-
-
 
     //set up a publisher to display clouds in rviz:
     ros::Publisher pubCloud = nh.advertise<sensor_msgs::PointCloud2> ("/pcl_cloud_display", 1);
