@@ -1,8 +1,6 @@
-#include <merry_pcl/merry_pcl.h>
+#include <merry_pcl_utils/merry_pcl_utils.h>
 
-enum COLORS { RED, GREEN, BLUE, BLACK, WHITE, WOODCOLOR, NONE };
-
-MerryPcl::MerryPcl(ros::NodeHandle* nodehandle):
+MerryPclutils::MerryPclutils(ros::NodeHandle* nodehandle):
         nh_(*nodehandle),
         pclKinect_ptr_(new PointCloud<pcl::PointXYZ>),
         pclKinect_clr_ptr_(new PointCloud<pcl::PointXYZRGB>),
@@ -22,16 +20,16 @@ MerryPcl::MerryPcl(ros::NodeHandle* nodehandle):
 //member helper function to set up subscribers;
 // note odd syntax: &ExampleRosClass::subscriberCallback is a pointer to a member function of ExampleRosClass
 // "this" keyword is required, to refer to the current instance of ExampleRosClass
-void MerryPcl::initializeSubscribers() {
+void MerryPclutils::initializeSubscribers() {
     ROS_INFO("Initializing Subscribers");
 
-    pointcloud_subscriber_ = nh_.subscribe("/kinect/depth/points", 1, &MerryPcl::kinectCB, this);
+    pointcloud_subscriber_ = nh_.subscribe("/kinect/depth/points", 1, &MerryPclutils::kinectCB, this);
     // subscribe to "extracted_points", which is published by Rviz tool
     //extracted_points_subscriber_ = nh_.subscribe<sensor_msgs::PointCloud2> ("/extracted_points", 1, &MerryPcl::selectCB, this);
 }
 
 //member helper function to set up publishers;
-void MerryPcl::initializePublishers() {
+void MerryPclutils::initializePublishers() {
     ROS_INFO("Initializing Publishers");
     //pointcloud_publisher_ = nh_.advertise<sensor_msgs::PointCloud2>("merry_pcl_pointcloud", 1, true);
     //patch_publisher_ = nh_.advertise<cwru_msgs::PatchParams>("pcl_patch_params", 1, true);
@@ -43,7 +41,7 @@ void MerryPcl::initializePublishers() {
  * callback fnc: receives transmissions of Kinect data; if got_kinect_cloud is false, copy current transmission to internal variable
  * @param cloud [in] messages received from Kinect
  */
-void MerryPcl::kinectCB(const sensor_msgs::PointCloud2ConstPtr& cloud) {
+void MerryPclutils::kinectCB(const sensor_msgs::PointCloud2ConstPtr& cloud) {
     if (!got_kinect_cloud_) {
         pcl::fromROSMsg(*cloud, *pclKinect_ptr_);
         pcl::fromROSMsg(*cloud, *pclKinect_clr_ptr_);
@@ -51,32 +49,32 @@ void MerryPcl::kinectCB(const sensor_msgs::PointCloud2ConstPtr& cloud) {
         got_kinect_cloud_ = true; //cue to "main" that callback received and saved a pointcloud 
         
 /*        //check some colors:
-		int npts_clr = pclKinect_clr_ptr_->points.size();
-		cout << "Kinect color pts size = " << npts_clr << endl;
-		avg_color_ = find_avg_color();*/
+        int npts_clr = pclKinect_clr_ptr_->points.size();
+        cout << "Kinect color pts size = " << npts_clr << endl;
+        avg_color_ = find_avg_color();*/
     }
 }
 
-Eigen::Vector3f MerryPcl::get_centroid(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr) {
-	return compute_centroid(cloud_ptr);
+Eigen::Vector3f MerryPclutils::get_centroid(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr) {
+    return compute_centroid(cloud_ptr);
 }
 
-Eigen::Vector3f MerryPcl::get_plane_normal(Eigen::MatrixXf points_mat) {
-	compute_plane_normal_and_major_axis(points_mat);
-	return plane_normal_;
+Eigen::Vector3f MerryPclutils::get_plane_normal(Eigen::MatrixXf points_mat) {
+    compute_plane_normal_and_major_axis(points_mat);
+    return plane_normal_;
 }
 
-Eigen::Vector3f MerryPcl::get_major_axis(Eigen::MatrixXf points_mat) {
-	compute_plane_normal_and_major_axis(points_mat);
-	return major_axis_;
+Eigen::Vector3f MerryPclutils::get_major_axis(Eigen::MatrixXf points_mat) {
+    compute_plane_normal_and_major_axis(points_mat);
+    return major_axis_;
 }
 
 //code to try and match found color to a specific color
-int MerryPcl::get_point_color(Eigen::Vector3d pt_color){
+int MerryPclutils::get_point_color(Eigen::Vector3d pt_color){
     // process the input color message
-	int r = pt_color(0);
-	int g = pt_color(1);
-	int b = pt_color(2);
+    int r = pt_color(0);
+    int g = pt_color(1);
+    int b = pt_color(2);
     // tolerance
     int tolerance = 100;
 
@@ -91,7 +89,7 @@ int MerryPcl::get_point_color(Eigen::Vector3d pt_color){
     return NONE;
 }
 
-void MerryPcl::get_transformed_extracted_points(pcl::PointCloud<pcl::PointXYZ> & outputCloud) {
+void MerryPclutils::get_transformed_extracted_points(pcl::PointCloud<pcl::PointXYZ> & outputCloud) {
     int npts = pclTransformedExtractedPoints_ptr_->points.size(); //how many points to extract
     outputCloud.header = pclTransformedExtractedPoints_ptr_->header;
     outputCloud.is_dense = pclTransformedExtractedPoints_ptr_->is_dense;
@@ -105,8 +103,9 @@ void MerryPcl::get_transformed_extracted_points(pcl::PointCloud<pcl::PointXYZ> &
     }
 }
 
+
 //same as above, but for general-purpose cloud
-void MerryPcl::get_general_purpose_cloud(pcl::PointCloud<pcl::PointXYZ> & outputCloud) {
+void MerryPclutils::get_general_purpose_cloud(pcl::PointCloud<pcl::PointXYZ> & outputCloud) {
     int npts = pclGenPurposeCloud_ptr_->points.size(); //how many points to extract
     outputCloud.header = pclGenPurposeCloud_ptr_->header;
     outputCloud.is_dense = pclGenPurposeCloud_ptr_->is_dense;
@@ -120,8 +119,15 @@ void MerryPcl::get_general_purpose_cloud(pcl::PointCloud<pcl::PointXYZ> & output
     }    
 } 
 
+
+
+
+
+
+
+
 // code to determine the height of the top surface of the block
-float MerryPcl::top_height(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud) {
+float MerryPclutils::top_height(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
 	float block_height = -DBL_MAX;
 	int npts = inputCloud->width * inputCloud->height;
 	pcl::PointXYZRGB so_many_points;
@@ -135,8 +141,9 @@ float MerryPcl::top_height(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud) {
 	return block_height;
 }
 
+
 // code to get avg. color. Comb through kinect colors and compute average color. (Disregard color=0,0,0) 
-Eigen::Vector3d MerryPcl::find_avg_color(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pclKinect_clr_ptr_){
+Eigen::Vector3d MerryPclutils::find_avg_color(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pclKinect_clr_ptr_){
 	Eigen::Vector3d avg_color;
     Eigen::Vector3d ref_color;
     ref_color<<147,147,147;
@@ -160,14 +167,12 @@ Eigen::Vector3d MerryPcl::find_avg_color(pcl::PointCloud<pcl::PointXYZRGB>::Ptr 
 }
 
 
-
-
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++++++++++++++ following are private member functions ++++++++++++++ */
 
 // code to determine centroid of block
-Eigen::Vector3f MerryPcl::compute_centroid(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr) {
-	Eigen::Vector3f cloud_pt;   
+Eigen::Vector3f MerryPclutils::compute_centroid(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr) {
+    Eigen::Vector3f cloud_pt;   
     int npts = cloud_ptr->points.size();    
     centroid_ = Eigen::MatrixXf::Zero(3, 1); //<<0,0,0; both right
     //add all the points together:
@@ -179,9 +184,10 @@ Eigen::Vector3f MerryPcl::compute_centroid(pcl::PointCloud<pcl::PointXYZ>::Ptr c
     return centroid_;
 }
 
+
 // code to determine major axis
-void MerryPcl::compute_plane_normal_and_major_axis(Eigen::MatrixXf points_mat) {
-	ROS_INFO("starting computation of plane_normal_and_major_axis from data: ");
+void MerryPclutils::compute_plane_normal_and_major_axis(Eigen::MatrixXf points_mat) {
+    ROS_INFO("starting computation of plane_normal_and_major_axis from data: ");
     int npts = points_mat.cols(); // number of points = number of columns in matrix; check the size
 
     // centroid_ has been computed before
@@ -201,7 +207,7 @@ void MerryPcl::compute_plane_normal_and_major_axis(Eigen::MatrixXf points_mat) {
     Eigen::EigenSolver<Eigen::Matrix3f> es3f(CoVar);
 
     Eigen::VectorXf evals; //we'll extract the eigenvalues to here
-	evals = es3f.eigenvalues().real(); // grab just the real parts
+    evals = es3f.eigenvalues().real(); // grab just the real parts
 
     double min_lambda = evals[0]; //initialize the hunt for min eval
     double max_lambda = evals[0]; // and for max eval
@@ -242,7 +248,7 @@ void MerryPcl::compute_plane_normal_and_major_axis(Eigen::MatrixXf points_mat) {
 }
 
 //get pts from cloud, pack the points into an Eigen::MatrixXf, then use above
-void MerryPcl::compute_plane_normal_and_major_axis(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_ptr) {
+void MerryPclutils::compute_plane_normal_and_major_axis(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_ptr) {
     Eigen::MatrixXf points_mat;
     Eigen::Vector3f cloud_pt;
     //populate points_mat from cloud data;
@@ -255,10 +261,10 @@ void MerryPcl::compute_plane_normal_and_major_axis(pcl::PointCloud<pcl::PointXYZ
         cloud_pt = input_cloud_ptr->points[i].getVector3fMap();
         points_mat.col(i) = cloud_pt;
     }
-	compute_plane_normal_and_major_axis(points_mat);
+    compute_plane_normal_and_major_axis(points_mat);
 }
 
-bool MerryPcl::isRed(int r, int g, int b, int tolerance) {
+bool MerryPclutils::isRed(int r, int g, int b, int tolerance) {
     // standard red rgb code
     int standard_r = 255;
     int standard_g = 0;
@@ -271,7 +277,7 @@ bool MerryPcl::isRed(int r, int g, int b, int tolerance) {
     return false;
 }
 
-bool MerryPcl::isGreen(int r, int g, int b, int tolerance) {
+bool MerryPclutils::isGreen(int r, int g, int b, int tolerance) {
     // standard red rgb code
     int standard_r = 255;
     int standard_g = 0;
@@ -285,7 +291,7 @@ bool MerryPcl::isGreen(int r, int g, int b, int tolerance) {
 }
 
 
-bool MerryPcl::isBlue(int r, int g, int b, int tolerance) {
+bool MerryPclutils::isBlue(int r, int g, int b, int tolerance) {
     // standard red rgb code
     int standard_r = 255;
     int standard_g = 0;
@@ -298,7 +304,7 @@ bool MerryPcl::isBlue(int r, int g, int b, int tolerance) {
     return false;
 }
 
-bool MerryPcl::isBlack(int r, int g, int b, int tolerance) {
+bool MerryPclutils::isBlack(int r, int g, int b, int tolerance) {
     // standard red rgb code
     int standard_r = 0;
     int standard_g = 0;
@@ -311,7 +317,7 @@ bool MerryPcl::isBlack(int r, int g, int b, int tolerance) {
     return false;
 }
 
-bool MerryPcl::isWhite(int r, int g, int b, int tolerance) {
+bool MerryPclutils::isWhite(int r, int g, int b, int tolerance) {
     // standard red rgb code
     int standard_r = 255;
     int standard_g = 255;
@@ -324,7 +330,7 @@ bool MerryPcl::isWhite(int r, int g, int b, int tolerance) {
     return false;
 }
 
-bool MerryPcl::isWoodcolor(int r, int g, int b, int tolerance) {
+bool MerryPclutils::isWoodcolor(int r, int g, int b, int tolerance) {
     // standard red rgb code
     int standard_r = 255;
     int standard_g = 228;
@@ -338,7 +344,7 @@ bool MerryPcl::isWoodcolor(int r, int g, int b, int tolerance) {
 }
 
 //need to fix this to put proper frame_id in header
-void MerryPcl::transform_cloud(Eigen::Affine3f A, pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_ptr, pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud_ptr) {
+void MerryPclutils::transform_cloud(Eigen::Affine3f A, pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_ptr, pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud_ptr) {
     output_cloud_ptr->header = input_cloud_ptr->header;
     output_cloud_ptr->is_dense = input_cloud_ptr->is_dense;
     output_cloud_ptr->width = input_cloud_ptr->width;
@@ -353,7 +359,7 @@ void MerryPcl::transform_cloud(Eigen::Affine3f A, pcl::PointCloud<pcl::PointXYZ>
     }
 }
 
-double MerryPcl::distance_between(Eigen::Vector3f pt1, Eigen::Vector3f pt2) {
+double MerryPclutils::distance_between(Eigen::Vector3f pt1, Eigen::Vector3f pt2) {
     Eigen::Vector3f pt = pt1 - pt2;
     double distance = pt(0)*pt(0) + pt(1)*pt(1) + pt(2)*pt(2);
     return distance;
@@ -362,7 +368,7 @@ double MerryPcl::distance_between(Eigen::Vector3f pt1, Eigen::Vector3f pt2) {
 /**
     This function is to extract the plane that colanar with the extracted patch.
 */
-void MerryPcl::extract_coplanar_pcl_operation() {
+void MerryPclutils::extract_coplanar_pcl_operation() {
     int npts = pclTransformed_ptr_->points.size(); //number of points in kinect point cloud
     //pclGenPurposeCloud_ptr_->points.resize(npts);
     Eigen::Vector3f centroid = compute_centroid(pclTransformedExtractedPoints_ptr_);
@@ -385,68 +391,6 @@ void MerryPcl::extract_coplanar_pcl_operation() {
     pclGenPurposeCloud_ptr_->height = 1; 
 
 } 
-
-
-
-/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-/* optionsal to be used for test purpose */
-
-/* grasp kinect point cloud */
-void MerryPcl::save_kinect_cloud() {
-    while (!got_kinect_cloud()) {
-        ROS_INFO("did not receive pointcloud");
-        ros::spinOnce();
-        ros::Duration(1.0).sleep();
-    }
-    ROS_INFO("Merry got a pointcloud!");
-    ROS_INFO("Merry is saving pointcloud ...");
-    save_kinect_snapshot();
-    save_kinect_clr_snapshot();  // save color version of pointcloud as well    
-}
-
-void MerryPcl::import_point_cloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr) {
-    while (pcl::io::loadPCDFile<pcl::PointXYZ> ("kinect_clr_snapshot.pcd", *cloud_ptr) == -1) { //* load the file
-        PCL_ERROR ("Couldn't read file kinect_clr_snapshot.pcd \n");
-    }
-}
-
-void MerryPcl::read_points_color(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_ptr) {
-        Eigen::Vector3d pt_color;
-        int color;
-    for (size_t i = 0; i < cloud_ptr->points.size (); ++i) {
-        std::cout << " " << (int) cloud_ptr->points[i].r
-                  << " " << (int) cloud_ptr->points[i].g
-                  << " " << (int) cloud_ptr->points[i].b << std::endl;
-
-        pt_color[0] = (int) cloud_ptr->points[i].r;
-        pt_color[1] = (int) cloud_ptr->points[i].g;
-        pt_color[2] = (int) cloud_ptr->points[i].b;
-        color = get_point_color(pt_color);
-        cout << color << endl;
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -551,12 +495,12 @@ void CwruPclUtils::filter_cloud_z(PointCloud<pcl::PointXYZ>::Ptr inputCloud, dou
     
 }
 
-void CwruPclUtils::analyze_extracted_points_color() {
-    int npts = pclTransformedextractedPoints_ptr_->points.size(); //number of points
-    //copy_cloud(pclTransformedextractedPoints_ptr_,pclGenPurposeCloud_ptr_); //now have a copy of the extracted points in gen-purpose object
+void CwruPclUtils::analyze_selected_points_color() {
+    int npts = pclTransformedSelectedPoints_ptr_->points.size(); //number of points
+    //copy_cloud(pclTransformedSelectedPoints_ptr_,pclGenPurposeCloud_ptr_); //now have a copy of the selected points in gen-purpose object
     //Eigen::Vector3f offset;
     //offset<<0,0,0.05;
-    int npts_clr = pclextractedPtsClr_ptr_->points.size();
+    int npts_clr = pclSelectedPtsClr_ptr_->points.size();
     cout<<"color pts size = "<<npts_clr<<endl;
         pcl::PointXYZRGB p;
         // unpack rgb into r/g/b
@@ -565,21 +509,21 @@ void CwruPclUtils::analyze_extracted_points_color() {
         int r_int;
     
     for (int i = 0; i < npts; ++i) {
-        p = pclextractedPtsClr_ptr_->points[i];
+        p = pclSelectedPtsClr_ptr_->points[i];
         r = (rgb >> 16) & 0x0000ff;
         r_int = (int) r;
         // g = (rgb >> 8)  & 0x0000ff;
         // b = (rgb)       & 0x0000ff;
         cout<<"r_int: "<<r_int<<endl;
         cout<<"r1: "<<r<<endl;
-        r=pclextractedPtsClr_ptr_->points[i].r;
+        r=pclSelectedPtsClr_ptr_->points[i].r;
         cout<<"r2 = "<<r<<endl;
  
-        //cout<<" ipt, r,g,b = "<<i<<","<<pclextractedPtsClr_ptr_->points[i].r<<", "<<
-        //        pclextractedPtsClr_ptr_->points[i].g<<", "<<pclextractedPtsClr_ptr_->points[i].b<<endl;
+        //cout<<" ipt, r,g,b = "<<i<<","<<pclSelectedPtsClr_ptr_->points[i].r<<", "<<
+        //        pclSelectedPtsClr_ptr_->points[i].g<<", "<<pclSelectedPtsClr_ptr_->points[i].b<<endl;
         //pclGenPurposeCloud_ptr_->points[i].getVector3fMap() = pclGenPurposeCloud_ptr_->points[i].getVector3fMap()+offset;   
     }    
-        cout<<"done combing through extracted pts"<<endl;
+        cout<<"done combing through selected pts"<<endl;
         got_kinect_cloud_=false; // get a new snapshot
 } 
 *////////////////////////////////

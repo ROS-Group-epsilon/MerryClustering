@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(merry_pcl)
+project(merry_pcl_utils)
 
 find_package(catkin_simple REQUIRED)
 find_package(PCL 1.7 REQUIRED)
@@ -20,16 +20,16 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
 # Libraries
-cs_add_library(merry_pcl src/merry_pcl.cpp)
+cs_add_library(merry_pcl_utils src/merry_pcl_utils.cpp)
    
 
 # Executables
-cs_add_executable(merry_pcl_main src/merry_pcl_main.cpp)
-cs_add_executable(merry_pcl_test2 src/merry_pcl_test2.cpp)
+cs_add_executable(merry_pcl_utils_main src/merry_pcl_utils_main.cpp)
+cs_add_executable(merry_pcl_utils_test src/merry_pcl_utils_test.cpp)
 
 #target_link_libraries(process_pcl ${PCL_LIBRARIES})
-target_link_libraries(merry_pcl_main merry_pcl ${catkin_LIBRARIES})
-target_link_libraries(merry_pcl_test2 merry_pcl ${catkin_LIBRARIES})
+target_link_libraries(merry_pcl_utils_main merry_pcl_utils ${catkin_LIBRARIES})
+target_link_libraries(merry_pcl_utils_test merry_pcl_utils ${catkin_LIBRARIES})
 
 cs_install()
 cs_export()

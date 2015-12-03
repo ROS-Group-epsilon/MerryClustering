@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>merry_pcl</name>
+  <name>pcl_block_sorter_kjw44</name>
   <version>0.0.0</version>
-  <description>The block_pcl package.</description>
+  <description>The pcl_block_sorter_kjw44 package.</description>
   
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->

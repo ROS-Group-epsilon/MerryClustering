@@ -1,5 +1,5 @@
-#ifndef MERRY_PCL_H_
-#define MERRY_PCL_H_
+#ifndef MERRY_PCL_UTILS_H_
+#define MERRY_PCL_UTILS_H_
 
 #include <ros/ros.h> //generic C++ stuff
 #include <stdlib.h>
@@ -36,47 +36,42 @@ using namespace Eigen;
 using namespace pcl;
 using namespace pcl::io;
 
-class MerryPcl {
+enum COLORS { RED, GREEN, BLUE, BLACK, WHITE, WOODCOLOR, NONE };
+
+class MerryPclutils {
 public:
-	MerryPcl(ros::NodeHandle* nodehandle);
+	MerryPclutils(ros::NodeHandle* nodehandle);
 
 	pcl::PointCloud<pcl::PointXYZ>::Ptr getKinectCloud() { return pclKinect_ptr_; };
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr getKinectColorCloud() { return pclKinect_clr_ptr_; };
 
 	void save_kinect_snapshot() { pcl::io::savePCDFileASCII ("kinect_snapshot.pcd", *pclKinect_ptr_); };
-    void save_kinect_clr_snapshot() { pcl::io::savePCDFileASCII ("kinect_clr_snapshot.pcd", *pclKinect_clr_ptr_); };
+	void save_kinect_clr_snapshot() { pcl::io::savePCDFileASCII ("kinect_clr_snapshot.pcd", *pclKinect_clr_ptr_); };
 
-	Eigen::Vector3f get_centroid(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr);
+ 	Eigen::Vector3f get_centroid(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr);
 	Eigen::Vector3f get_plane_normal(Eigen::MatrixXf points_mat);
 	Eigen::Vector3f get_major_axis(Eigen::MatrixXf points_mat);
 
 	int get_point_color(Eigen::Vector3d pt_color);
 	void get_transformed_extracted_points(pcl::PointCloud<pcl::PointXYZ> & outputCloud);
 	void get_general_purpose_cloud(pcl::PointCloud<pcl::PointXYZ> & outputCloud);
-	
-	bool got_kinect_cloud() { return got_kinect_cloud_; };
-    bool got_extracted_points() {return got_extracted_points_;};
 
-	void save_kinect_cloud();
-	void import_point_cloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr);
-	void read_points_color(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_ptr);
+	bool got_kinect_cloud() { return got_kinect_cloud_; };
+	bool got_extracted_points() {return got_extracted_points_;};
+
+
 	float top_height(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud);
 	Eigen::Vector3d find_avg_color(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pclKinect_clr_ptr_);
 
-	void extract_coplanar_pcl_operation();
-	
 private:
 	// member variables
 	ros::NodeHandle nh_;
     ros::Subscriber pointcloud_subscriber_; //use this to subscribe to a pointcloud topic
     //ros::Subscriber selected_points_subscriber_; // this to subscribe to "selectedPoints" topic from Rviz
     //ros::Publisher  pointcloud_publisher_;
-    //ros::Publisher patch_publisher_;   
+    //ros::Publisher patch_publisher_;  
 
-	Eigen::Vector3d pt_color;
-	Eigen::Vector3f plane_normal_, major_axis_, centroid_;
-
-    bool got_kinect_cloud_;
+	bool got_kinect_cloud_;
     bool got_extracted_points_;
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr pclKinect_ptr_; //(new PointCloud<pcl::PointXYZ>);
@@ -86,9 +81,12 @@ private:
 
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr pclKinect_clr_ptr_; //pointer for color version of pointcloud
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr pclExtractedPtsClr_ptr_; //pointer for color version of pointcloud
-    pcl::PointCloud<pcl::PointXYZ>::Ptr pclGenPurposeCloud_ptr_;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr pclGenPurposeCloud_ptr_; 
 
-    // member functions
+	Eigen::Vector3d pt_color;
+	Eigen::Vector3f plane_normal_, major_axis_, centroid_;
+
+	// member functions
     void initializeSubscribers(); // we will define some helper methods to encapsulate the gory details of initializing subscribers, publishers and services
     void initializePublishers();
 
@@ -104,9 +102,10 @@ private:
 	bool isBlack(int r, int g, int b, int tolerance);
 	bool isWhite(int r, int g, int b, int tolerance);
 	bool isWoodcolor(int r, int g, int b, int tolerance);
-	
+
 	void transform_cloud(Eigen::Affine3f A, pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_ptr, pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud_ptr);
 	double distance_between(Eigen::Vector3f pt1, Eigen::Vector3f pt2);
+	void extract_coplanar_pcl_operation();
 };
 
 #endif

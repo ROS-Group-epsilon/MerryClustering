@@ -1,14 +1,14 @@
-#include <merry_pcl/merry_pcl.h>
+#include <merry_pcl_utils/merry_pcl_utils.h>
 #include <cwru_pcl_utils/cwru_pcl_utils.h>
 #include <iostream>
 using namespace std;
 
 int main(int argc, char** argv) {
-    ros::init(argc, argv, "block_sorter_main"); //node name
+    ros::init(argc, argv, "merry_pcl_utils_main"); //node name
     ros::NodeHandle nh;
     CwruPclUtils cwru_pcl_utils(&nh);
 
-    MerryPcl merry_pcl_utils(&nh);
+    MerryPclutils merry_pcl_utils_utils(&nh);
 
     while (!cwru_pcl_utils.got_kinect_cloud()) {
         ROS_INFO("did not receive pointcloud");
@@ -29,14 +29,17 @@ int main(int argc, char** argv) {
         return (-1);
       }
 
-    for (size_t i = 0; i < cloud->points.size(); ++i){
-        Eigen::Vector3d pt_color;
-        pt_color[0] = (int) cloud->points[i].r;
-        pt_color[1] = (int) cloud->points[i].g;
-        pt_color[2] = (int) cloud->points[i].b;
-        int color = merry_pcl_utils.get_point_color(pt_color);
-        //cout << color << endl;
-    }
+    // for (size_t i = 0; i < cloud->points.size(); ++i){
+    //     Eigen::Vector3d pt_color;
+    //     pt_color[0] = (int) cloud->points[i].r;
+    //     pt_color[1] = (int) cloud->points[i].g;
+    //     pt_color[2] = (int) cloud->points[i].b;
+    //     cout <<  merry_pcl_utils_utils.color_detection(pt_color) << endl;
+    // }
+
+
+
+
 
     //set up a publisher to display clouds in rviz:
     ros::Publisher pubCloud = nh.advertise<sensor_msgs::PointCloud2> ("/pcl_cloud_display", 1);
