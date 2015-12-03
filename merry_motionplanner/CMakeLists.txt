@@ -29,6 +29,8 @@ cs_add_executable(merry_motionplanner_main src/merry_motionplanner_main.cpp)
 
 target_link_libraries(merry_motionplanner_main merry_motionplanner ${catkin_LIBRARIES})
 target_link_libraries(merry_motionplanner_main merry_gripper ${catkin_LIBRARIES})
+#target_link_libraries(merry_motionplanner_main merry_pcl ${catkin_LIBRARIES})
+#target_link_libraries(merry_motionplanner_main merry_hmi ${catkin_LIBRARIES})
 # TODO make sure you link with all necessary libraries!
 
 cs_install()
