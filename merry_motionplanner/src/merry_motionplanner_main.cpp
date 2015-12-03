@@ -1,4 +1,6 @@
 #include <merry_gripper/merry_gripper.h>
+//#include <merry_pcl/merry_pcl.h>
+//#include <merry_hmi/merry_hmi.h>
 #include <merry_motionplanner/merry_motionplanner.h>
 #include <cwru_pcl_utils/cwru_pcl_utils.h>
 
@@ -8,6 +10,9 @@ int main(int argc, char** argv) {
 
 	MerryGripper gripper(&nh);
 	MerryMotionplanner motionplanner(&nh);
+	//MerryPcl merry_pcl(&nh);
+	//merry_hmi merry_hmi(&nh);
+
 	CwruPclUtils cwru_pcl_utils(&nh);
 
 	while(!cwru_pcl_utils.got_kinect_cloud()) {
@@ -58,11 +63,16 @@ int main(int argc, char** argv) {
 
 	while(ros::ok()) {
 		// TODO CHANGE THIS IF STATEMENT CONDITION TO BE IF BLOCK HAS BEEN FOUND AND NO OBSTRUCTION HAS BEEN FOUND
+		//if( && !merry_hmi.isObstructed()) {
 		if(true) {
 			ROS_INFO("block has been found");
 
 
 			//ASSUMING THAT I AM RECEIVING A CENTROID, MAJOR AXIS, AND PLANE_NORMAL FROM PCL LIBRARY
+
+			//centroid = merry_pcl.compute_centroid();
+			//major_axis = merry_pcl. ;
+			//plane_normal = merry_pcl. ;
 
 
 			for(int i = 0; i < 3; i++) {
