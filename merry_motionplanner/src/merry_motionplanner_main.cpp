@@ -104,23 +104,31 @@ int main(int argc, char** argv) {
 			gripper.grasp();
 
 			/*
-			if(color = _____) {
+			Vectorq7x1 q_vec_pose;
+			if(color = red) {
 				//get these numbers from my_interesting_moves code
 				//hard code in positions for each block
-			} else if() {
+				q_vec_pose << 0.8, -0.3, 0, 1, 0, 0.8, 0; //from move to center
 
-			} else if() {
+			} else if(color = green) {
+				q_vec_pose << 1.2, -0.2, 0, 0.8, 0, 0.8, 0; //from move to left
 
-			} else if() {
+			} else if(color = blue) {
+				q_vec_pose << 0.4, -0.2, 0, 0.8, 0, 0.8, 0; //from move to right
 
-			} else if() {
+			} else if(color = black) {
+				q_vec_pose << 0.8, -0.6, 0, 2, 0, 0.6, 0; //from move to center behind
 
-			} else if() {
+			} else if(color = white) {
+				q_vec_pose << 1.2, -0.4, 0, 1.5, 0.6, 1, 0; //from move to left behind
 
+			} else if(color = wood) {
+				q_vec_pose << 0.4, -0.4, 0, 1.5, -0.6, 1, 0; //from move to right behind
 			} else {
-				ROS_WARN("color of block could not be determined.");
+				ROS_WARN("Color of block could not be determined.");
 				return 0;
 			}
+
 			*/
 			//go to hard coded position with:
 			/*
