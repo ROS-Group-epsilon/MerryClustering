@@ -25,7 +25,7 @@ void MerryPclutils::initializeSubscribers() {
 
     pointcloud_subscriber_ = nh_.subscribe("/kinect/depth/points", 1, &MerryPclutils::kinectCB, this);
     // subscribe to "extracted_points", which is published by Rviz tool
-    //extracted_points_subscriber_ = nh_.subscribe<sensor_msgs::PointCloud2> ("/extracted_points", 1, &MerryPcl::selectCB, this);
+    extracted_points_subscriber_ = nh_.subscribe<sensor_msgs::PointCloud2> ("/extracted_points", 1, &MerryPclutils::extractCB, this);
 }
 
 //member helper function to set up publishers;
@@ -53,6 +53,10 @@ void MerryPclutils::kinectCB(const sensor_msgs::PointCloud2ConstPtr& cloud) {
         cout << "Kinect color pts size = " << npts_clr << endl;
         avg_color_ = find_avg_color();*/
     }
+}
+
+void MerryPclutils::extractCB(const sensor_msgs::PointCloud2ConstPtr& cloud) {
+    ROS_INFO("Extracting ... "); 
 }
 
 Eigen::Vector3f MerryPclutils::get_centroid(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr) {
@@ -115,15 +119,66 @@ void MerryPclutils::get_general_purpose_cloud(pcl::PointCloud<pcl::PointXYZ> & o
     cout << "copying cloud w/ npts =" << npts << endl;
     outputCloud.points.resize(npts);
     for (int i = 0; i < npts; ++i) {
-        outputCloud.points[i].getVector3fMap() = pclGenPurposeCloud_ptr_->points[i].getVector3fMap();   
+        outputCloud.points[i].getVector3fMap() = pclGenPurposeCloud_ptr_->points[i].getVector3fMap();
+        cout << "copying point num = " << i << endl;  
     }    
 } 
 
+/**
+    This function is to extract the plane that colanar with the extracted patch.
+*/
+void MerryPclutils::extract_coplanar_pcl_operation(Eigen::Vector3f centroid) {
+    int npts = pclTransformed_ptr_->points.size(); //number of points in kinect point cloud
+    //pclGenPurposeCloud_ptr_->points.resize(npts);
 
+    cout<< "coplanar ... " << endl;
 
+    for (int i = 0; i < npts; ++i) {
+        if( distance_between( centroid, pclTransformed_ptr_->points[i].getVector3fMap() ) < 1.5
+                && ( centroid[2] - pclTransformed_ptr_->points[i].getVector3fMap()[2] ) < 0.000001
+                && ( centroid[2] - pclTransformed_ptr_->points[i].getVector3fMap()[2] ) > -0.000001 ) {
 
+            cout << "height of centroid = " << centroid[2] << endl;
+            cout << "the height of point " << i << "= " << pclTransformed_ptr_->points[i].getVector3fMap()[2] << endl;
+            pclGenPurposeCloud_ptr_->points.push_back(pclTransformed_ptr_->points[i]);
+        }  
+    }
 
+    pclGenPurposeCloud_ptr_->header = pclTransformedExtractedPoints_ptr_->header;
+    pclGenPurposeCloud_ptr_->is_dense = pclTransformedExtractedPoints_ptr_->is_dense;
+    pclGenPurposeCloud_ptr_->width = npts;
+    pclGenPurposeCloud_ptr_->height = 1; 
 
+} 
+
+Eigen::Affine3f MerryPclutils::transformTFToEigen(const tf::Transform &t) {
+    Eigen::Affine3f e;
+    // treat the Eigen::Affine as a 4x4 matrix:
+    for (int i = 0; i < 3; i++) {
+        e.matrix()(i, 3) = t.getOrigin()[i]; //copy the origin from tf to Eigen
+        for (int j = 0; j < 3; j++) {
+            e.matrix()(i, j) = t.getBasis()[i][j]; //and copy 3x3 rotation matrix
+        }
+    }
+    // Fill in identity in last row
+    for (int col = 0; col < 3; col++)
+        e.matrix()(3, col) = 0;
+    e.matrix()(3, 3) = 1;
+    return e;
+}
+
+/**here is a function that transforms a cloud of points into an alternative frame;
+ * it assumes use of pclKinect_ptr_ from kinect sensor as input, to pclTransformed_ptr_ , the cloud in output frame
+ * 
+ * @param A [in] supply an Eigen::Affine3f, such that output_points = A*input_points
+ */
+void MerryPclutils::transform_kinect_cloud(Eigen::Affine3f A) {
+    transform_cloud(A, pclKinect_ptr_, pclTransformed_ptr_);
+}
+
+void MerryPclutils::transform_selected_points_cloud(Eigen::Affine3f A) {
+    transform_cloud(A, pclExtractedPoints_ptr_, pclTransformedExtractedPoints_ptr_);
+}
 
 
 // code to determine the height of the top surface of the block
@@ -365,32 +420,7 @@ double MerryPclutils::distance_between(Eigen::Vector3f pt1, Eigen::Vector3f pt2)
     return distance;
 }
 
-/**
-    This function is to extract the plane that colanar with the extracted patch.
-*/
-void MerryPclutils::extract_coplanar_pcl_operation() {
-    int npts = pclTransformed_ptr_->points.size(); //number of points in kinect point cloud
-    //pclGenPurposeCloud_ptr_->points.resize(npts);
-    Eigen::Vector3f centroid = compute_centroid(pclTransformedExtractedPoints_ptr_);
-    cout<< "coplanar ... " << endl;
 
-    for (int i = 0; i < npts; ++i) {
-        if( distance_between( centroid, pclTransformed_ptr_->points[i].getVector3fMap() ) < 0.8
-                && ( centroid[2] - pclTransformed_ptr_->points[i].getVector3fMap()[2] ) < 0.000001
-                && ( centroid[2] - pclTransformed_ptr_->points[i].getVector3fMap()[2] ) > -0.000001 ) {
-
-            cout << "height of centroid = " << centroid[2] << endl;
-            cout << "the height of point " << i << "= " << pclTransformed_ptr_->points[i].getVector3fMap()[2] << endl;
-            pclGenPurposeCloud_ptr_->points.push_back(pclTransformed_ptr_->points[i]);
-        }  
-    }
-
-    pclGenPurposeCloud_ptr_->header = pclTransformedExtractedPoints_ptr_->header;
-    pclGenPurposeCloud_ptr_->is_dense = pclTransformedExtractedPoints_ptr_->is_dense;
-    pclGenPurposeCloud_ptr_->width = npts;
-    pclGenPurposeCloud_ptr_->height = 1; 
-
-} 
 
 
 

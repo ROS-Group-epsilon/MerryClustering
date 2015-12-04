@@ -44,6 +44,7 @@ public:
 
 	pcl::PointCloud<pcl::PointXYZ>::Ptr getKinectCloud() { return pclKinect_ptr_; };
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr getKinectColorCloud() { return pclKinect_clr_ptr_; };
+	pcl::PointCloud<pcl::PointXYZ>::Ptr getTransformedKinectCloud() { return pclTransformed_ptr_; };
 
 	void save_kinect_snapshot() { pcl::io::savePCDFileASCII ("kinect_snapshot.pcd", *pclKinect_ptr_); };
 	void save_kinect_clr_snapshot() { pcl::io::savePCDFileASCII ("kinect_clr_snapshot.pcd", *pclKinect_clr_ptr_); };
@@ -58,7 +59,10 @@ public:
 
 	bool got_kinect_cloud() { return got_kinect_cloud_; };
 	bool got_extracted_points() {return got_extracted_points_;};
-
+	void extract_coplanar_pcl_operation(Eigen::Vector3f centroid);
+	Eigen::Affine3f transformTFToEigen(const tf::Transform &t);
+	void transform_kinect_cloud(Eigen::Affine3f A);
+	void transform_selected_points_cloud(Eigen::Affine3f A);
 
 	float top_height(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud);
 	Eigen::Vector3d find_avg_color(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pclKinect_clr_ptr_);
@@ -67,7 +71,7 @@ private:
 	// member variables
 	ros::NodeHandle nh_;
     ros::Subscriber pointcloud_subscriber_; //use this to subscribe to a pointcloud topic
-    //ros::Subscriber selected_points_subscriber_; // this to subscribe to "selectedPoints" topic from Rviz
+    ros::Subscriber extracted_points_subscriber_; // this to subscribe to "selectedPoints" topic from Rviz
     //ros::Publisher  pointcloud_publisher_;
     //ros::Publisher patch_publisher_;  
 
@@ -91,6 +95,7 @@ private:
     void initializePublishers();
 
     void kinectCB(const sensor_msgs::PointCloud2ConstPtr& cloud);
+	void extractCB(const sensor_msgs::PointCloud2ConstPtr& cloud);
 
 	Eigen::Vector3f compute_centroid(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr);
 	void compute_plane_normal_and_major_axis(Eigen::MatrixXf points_mat);
@@ -105,7 +110,6 @@ private:
 
 	void transform_cloud(Eigen::Affine3f A, pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_ptr, pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud_ptr);
 	double distance_between(Eigen::Vector3f pt1, Eigen::Vector3f pt2);
-	void extract_coplanar_pcl_operation();
 };
 
 #endif
