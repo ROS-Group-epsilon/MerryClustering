@@ -12,7 +12,6 @@
 <!-- enable the robot for motion commands-->
 <node pkg="baxter_tools" type = "enable_robot.py" name="enable_robot" args="-e"/>
 
-
 <!-- after robot is running and enabled, start up these nodes -->
 <!-- tool transform publisher -->
 <include file ="$(find cwru_baxter_launch)/yale_gripper_xform.launch"/>
@@ -30,7 +29,7 @@
 <!-- rviz -->
 <node pkg="rviz" type="rviz" name="rviz"/>
 
-<!--the example sensor-guided motion node -->
+<!--the merry_motionplanner node -->
 <node pkg="merry_motionplanner" type="merry_motionplanner_main" name="merry_motionplanner_main"/>
 
 </launch>
