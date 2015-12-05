@@ -215,6 +215,7 @@ int MerryPclutils::detect_color(Eigen::Vector3d pt_color){
     if(isBlack(r,g,b,tolerance)) return BLACK;
     if(isWhite(r,g,b,tolerance)) return WHITE;
     if(isWoodcolor(r,g,b,tolerance)) return WOODCOLOR;
+    if(isCancolor(r,g,b,tolerance)) return CANCOLOR;
 
     //ROS_INFO("color undefined");
     return NONE;
@@ -525,6 +526,19 @@ bool MerryPclutils::isWoodcolor(int r, int g, int b, int tolerance) {
 
     if(abs(standard_r - r) < tolerance && abs(standard_g - g) < tolerance && abs(standard_b - b) < tolerance) {
         ROS_INFO("WOODCOLOR");
+        return true;
+    }
+    return false;
+}
+
+bool MerryPclutils::isCancolor(int r, int g, int b, int tolerance) {
+    // standard red rgb code
+    int standard_r = 104;
+    int standard_g = 104;
+    int standard_b = 123;
+
+    if(abs(standard_r - r) < tolerance && abs(standard_g - g) < tolerance && abs(standard_b - b) < tolerance) {
+        ROS_INFO("CANCOLOR");
         return true;
     }
     return false;

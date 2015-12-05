@@ -169,12 +169,9 @@ int main(int argc, char** argv) {
 			
 			// plan path to goal destination that was determined above
 			// execute motion if path was determined to be successful
-			ROS_INFO("about to create plan");
 			rtn_val = motionplanner.rt_arm_plan_jspace_path_current_to_qgoal(q_vec_pose);
-			ROS_INFO("motion has been planned. rtn_val = %d", rtn_val);
 			if (rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
 				rtn_val = motionplanner.rt_arm_execute_planned_path();
-				ROS_INFO("motion executed");
 			} else {
 				ROS_WARN("Joint space path to desired pose is not achievable.");
 				return 0;
