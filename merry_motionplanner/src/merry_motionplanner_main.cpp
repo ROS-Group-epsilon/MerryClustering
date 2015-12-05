@@ -108,30 +108,34 @@ int main(int argc, char** argv) {
 			gripper.grasp();
 
 			Eigen::VectorXd q_vec_pose;
-			q_vec_pose << 0, 0, 0, 0, 0, 0, 0;
-			/*
-			if(color == red) {
-				q_vec_pose << 0.8, -0.3, 0, 1, 0, 0.8, 0; //from move to center
+			vector<int> selected_indices;
+			Eigen::Vector3d avg_color;
 
-			} else if(color == green) {
-				q_vec_pose << 1.2, -0.2, 0, 0.8, 0, 0.8, 0; //from move to left
+			
+			avg_color = merry_pcl.find_avg_color_selected_pts(selected_indices);
+			
+			if(merry_pcl.detect_color(avg_color) == MerryPclutils::RED) {
+				q_vec_pose << 0.8, -0.3, 0, 1, 0, 0.8, 0; //move to center
 
-			} else if(color == blue) {
-				q_vec_pose << 0.4, -0.2, 0, 0.8, 0, 0.8, 0; //from move to right
+			} else if(merry_pcl.detect_color(avg_color) == MerryPclutils::GREEN) {
+				q_vec_pose << 1.2, -0.2, 0, 0.8, 0, 0.8, 0; //move to left
 
-			} else if(color == black) {
-				q_vec_pose << 0.8, -0.6, 0, 2, 0, 0.6, 0; //from move to center behind
+			} else if(merry_pcl.detect_color(avg_color) == MerryPclutils::BLUE) {
+				q_vec_pose << 0.4, -0.2, 0, 0.8, 0, 0.8, 0; //move to right
 
-			} else if(color == white) {
-				q_vec_pose << 1.2, -0.4, 0, 1.5, 0.6, 1, 0; //from move to left behind
+			} else if(merry_pcl.detect_color(avg_color) == MerryPclutils::BLACK) {
+				q_vec_pose << 0.8, -0.6, 0, 2, 0, 0.6, 0; //move to center behind
 
-			} else if(color == wood) {
-				q_vec_pose << 0.4, -0.4, 0, 1.5, -0.6, 1, 0; //from move to right behind
+			} else if(merry_pcl.detect_color(avg_color) == MerryPclutils::WHITE) {
+				q_vec_pose << 1.2, -0.4, 0, 1.5, 0.6, 1, 0; //move to left behind
+
+			} else if(merry_pcl.detect_color(avg_color) == MerryPclutils::WOODCOLOR) {
+				q_vec_pose << 0.4, -0.4, 0, 1.5, -0.6, 1, 0; //move to right behind
 			} else {
 				ROS_WARN("Color of block could not be determined.");
 				return 0;
 			}
-			*/
+			
 
 			rtn_val = motionplanner.rt_arm_plan_jspace_path_current_to_qgoal(q_vec_pose);
 			if (rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
