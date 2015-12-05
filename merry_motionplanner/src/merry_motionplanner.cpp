@@ -336,9 +336,9 @@ Eigen::Affine3d MerryMotionplanner::construct_affine_pose(Eigen::Matrix3d orient
     Eigen::Affine3d Affine_des_gripper;       
     Affine_des_gripper.linear() = orientation;
     Affine_des_gripper.translation() = des;
-    cout << "des origin: " << Affine_des_gripper.translation().transpose() << endl;
-    cout << "orientation: " << endl;
-    cout << orientation << endl;
+    std::cout << "des origin: " << Affine_des_gripper.translation().transpose() << "\n";
+    std::cout << "orientation: " << "\n";
+    std::cout << orientation << "\n";
     return Affine_des_gripper;
 }
 
