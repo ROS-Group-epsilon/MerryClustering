@@ -4,6 +4,8 @@
 #include <merry_motionplanner/merry_motionplanner.h>
 #include <cwru_pcl_utils/cwru_pcl_utils.h>
 
+typedef Eigen::Matrix<double, 7, 1> Vectorq7x1;
+
 int main(int argc, char** argv) {
 	ROS_INFO("began running main method");
 	ros::init(argc, argv, "merry_motionplanner_action_client");
@@ -38,8 +40,8 @@ int main(int argc, char** argv) {
 	while(tferr) {
 		tferr = false;
 		try {
-			tf_listener.lookupTransform("torso", "kinect_pc_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
-			//tf_listener.lookupTransform("torso", "camera_rgb_optical_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
+			//tf_listener.lookupTransform("torso", "kinect_pc_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
+			tf_listener.lookupTransform("torso", "camera_rgb_optical_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
 		} catch(tf::TransformException &exception) {
 			ROS_ERROR("%s", exception.what());
 			tferr = true;
@@ -109,6 +111,8 @@ int main(int argc, char** argv) {
 			Rmat.col(2) = zvec_des;
 			Affine_des_gripper.linear() = Rmat;
 			Affine_des_gripper.translation() = origin_des;
+			std::cout<<"orientation: "<<std::endl;
+            std::cout<<Rmat<<std::endl;
 
 			rt_tool_pose.pose = motionplanner.transformEigenAffine3dToPose(Affine_des_gripper);
 
@@ -124,7 +128,8 @@ int main(int argc, char** argv) {
 			gripper.grasp();
 
 			// the following uses the MerryPclutils library in order to determine what color the block is
-			Eigen::VectorXd q_vec_pose;
+			//Eigen::VectorXd q_vec_pose;
+			Vectorq7x1 q_vec_pose;
 			vector<int> selected_indices;
 			Eigen::Vector3d avg_color;
 
@@ -133,25 +138,30 @@ int main(int argc, char** argv) {
 			double radius = 0.5;
 			merry_pcl.filter_cloud_z(plane_dist, z_eps, radius, centroid, selected_indices);
 			avg_color = merry_pcl.find_avg_color_selected_pts(selected_indices);
+			ROS_INFO_STREAM("r: " << avg_color[0] << " g: " << avg_color[1] << " b: " << avg_color[2] << "\n");
 			
+			int color = merry_pcl.detect_color(avg_color);
+			std::cin>>color;
 			// depending on color of block, will assign a different goal destination
-			if(merry_pcl.detect_color(avg_color) == 0 /*MerryPclutils::COLORS::RED*/) {
+			if(color == 0 /*MerryPclutils::COLORS::RED*/) {
 				q_vec_pose << 0.8, -0.3, 0, 1, 0, 0.8, 0; //move to center
 
-			} else if(merry_pcl.detect_color(avg_color) == 1 /*MerryPclutils::COLORS::GREEN*/) {
+			} else if(color == 1 /*MerryPclutils::COLORS::GREEN*/) {
 				q_vec_pose << 1.2, -0.2, 0, 0.8, 0, 0.8, 0; //move to left
 
-			} else if(merry_pcl.detect_color(avg_color) == 2 /*MerryPclutils::COLORS::BLUE*/) {
+			} else if(color == 2 /*MerryPclutils::COLORS::BLUE*/) {
 				q_vec_pose << 0.4, -0.2, 0, 0.8, 0, 0.8, 0; //move to right
 
-			} else if(merry_pcl.detect_color(avg_color) == 3 /*MerryPclutils::COLORS::BLACK*/) {
+			} else if(color == 3 /*MerryPclutils::COLORS::BLACK*/) {
 				q_vec_pose << 0.8, -0.6, 0, 2, 0, 0.6, 0; //move to center behind
 
-			} else if(merry_pcl.detect_color(avg_color) == 4 /*MerryPclutils::COLORS::WHITE*/) {
+			} else if(color == 4 /*MerryPclutils::COLORS::WHITE*/) {
 				q_vec_pose << 1.2, -0.4, 0, 1.5, 0.6, 1, 0; //move to left behind
 
-			} else if(merry_pcl.detect_color(avg_color) == 5 /*MerryPclutils::COLORS::WOODCOLOR*/) {
+			} else if(color == 5 /*MerryPclutils::COLORS::WOODCOLOR*/) {
 				q_vec_pose << 0.4, -0.4, 0, 1.5, -0.6, 1, 0; //move to right behind
+			} else if (color == 6){
+				q_vec_pose <<  1.2, -0.2, 0, 0.8, 0, 0.8, 0;
 			} else {
 				ROS_WARN("Color of block could not be determined.");
 				return 0;
@@ -159,9 +169,12 @@ int main(int argc, char** argv) {
 			
 			// plan path to goal destination that was determined above
 			// execute motion if path was determined to be successful
+			ROS_INFO("about to create plan");
 			rtn_val = motionplanner.rt_arm_plan_jspace_path_current_to_qgoal(q_vec_pose);
+			ROS_INFO("motion has been planned. rtn_val = %d", rtn_val);
 			if (rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
 				rtn_val = motionplanner.rt_arm_execute_planned_path();
+				ROS_INFO("motion executed");
 			} else {
 				ROS_WARN("Joint space path to desired pose is not achievable.");
 				return 0;
