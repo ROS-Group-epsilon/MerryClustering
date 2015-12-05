@@ -67,12 +67,16 @@ int main(int argc, char** argv) {
 		if(true) {
 			ROS_INFO("block has been found");
 
+			pcl::PointCloud<pcl::PointXYZ>::Ptr kinect_cloud = merry_pcl.getKinectCloud();
+			pcl::PointCloud<pcl::PointXYZRGB>::Ptr kinect_color_cloud = merry_pcl.getKinectColorCloud();
+			pcl::PointCloud<pcl::PointXYZ>::Ptr extracted_plane;
 
-			//ASSUMING THAT I AM RECEIVING A CENTROID, MAJOR AXIS, AND PLANE_NORMAL FROM PCL LIBRARY
-
-			//centroid = merry_pcl.compute_centroid();
-			//major_axis = merry_pcl. ;
-			//plane_normal = merry_pcl. ;
+			// TODO this might not be right
+			// if something goes wrong, check this first
+			extracted_plane = merry_pcl.getGenPurposeCloud();
+			centroid = merry_pcl.get_centroid(extracted_plane);
+			major_axis = merry_pcl.get_major_axis(extracted_plane);
+			plane_normal = merry_pcl.get_plane_normal(extracted_plane);
 
 
 			for(int i = 0; i < 3; i++) {
