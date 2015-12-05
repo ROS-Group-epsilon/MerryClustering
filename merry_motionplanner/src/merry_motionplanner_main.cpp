@@ -63,21 +63,25 @@ int main(int argc, char** argv) {
 
 	while(ros::ok()) {
 		// TODO CHANGE THIS IF STATEMENT CONDITION TO BE IF BLOCK HAS BEEN FOUND AND NO OBSTRUCTION HAS BEEN FOUND
-		//if( && !merry_hmi.isObstructed()) {
-		if(true) {
+		if(!merry_hmi.isObstructed()) {
 			ROS_INFO("block has been found");
 
-			pcl::PointCloud<pcl::PointXYZ>::Ptr kinect_cloud = merry_pcl.getKinectCloud();
-			pcl::PointCloud<pcl::PointXYZRGB>::Ptr kinect_color_cloud = merry_pcl.getKinectColorCloud();
-			pcl::PointCloud<pcl::PointXYZ>::Ptr extracted_plane;
+			// pcl::PointCloud<pcl::PointXYZ>::Ptr kinect_cloud = merry_pcl.getKinectCloud(); // TODO check if this is needed
+			pcl::PointCloud<pcl::PointXYZ> display_cloud;
+			pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_kinect_cloud, extracted_plane;
 
-			// TODO this might not be right
-			// if something goes wrong, check this first
+			merry_pcl.transform_kinect_cloud(A_sensor_wrt_torso);
+			transformed_kinect_cloud = merry_pcl.getTransformedKinectCloud();
+			Eigen::Vector3f init_pt = merry_pcl.get_top_point(transformed_kinect_cloud);
+
+			merry_pcl.extract_coplanar_pcl_operation(init_pt);
+			merry_pcl.get_general_purpose_cloud(display_cloud);
 			extracted_plane = merry_pcl.getGenPurposeCloud();
+
+			// detemine what the centroid, major axis, and plane normal are
 			centroid = merry_pcl.get_centroid(extracted_plane);
 			major_axis = merry_pcl.get_major_axis(extracted_plane);
 			plane_normal = merry_pcl.get_plane_normal(extracted_plane);
-
 
 			for(int i = 0; i < 3; i++) {
 				origin_des[i] = centroid[i];
@@ -111,7 +115,10 @@ int main(int argc, char** argv) {
 			vector<int> selected_indices;
 			Eigen::Vector3d avg_color;
 
-			
+			plane_dist = plane_normal.dot(centroid);
+			double z_eps = 0.005;
+			double radius = 0.5;
+			merry_pcl.filter_cloud_z(plane_dist, z_eps, radius, centroid, selected_indices);
 			avg_color = merry_pcl.find_avg_color_selected_pts(selected_indices);
 			
 			if(merry_pcl.detect_color(avg_color) == MerryPclutils::RED) {
