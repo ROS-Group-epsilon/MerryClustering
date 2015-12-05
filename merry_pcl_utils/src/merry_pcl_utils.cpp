@@ -8,7 +8,7 @@ MerryPclutils::MerryPclutils(ros::NodeHandle* nodehandle):
         pclExtractedPoints_ptr_(new PointCloud<pcl::PointXYZ>),
         pclExtractedPtsClr_ptr_(new PointCloud<pcl::PointXYZRGB>),
         pclTransformedExtractedPoints_ptr_(new PointCloud<pcl::PointXYZ>),
-        pclGenPurposeCloud_ptr_(new PointCloud<pcl::PointXYZ>) {
+		pclGenPurposeCloud_ptr_(new PointCloud<pcl::PointXYZ>) {
     // initialize ... 
     ROS_INFO("In Constructor ... ");    
     initializeSubscribers();
@@ -17,7 +17,7 @@ MerryPclutils::MerryPclutils(ros::NodeHandle* nodehandle):
     got_extracted_points_ = false;
 }
 
-//member helper function to set up subscribers;
+// member helper function to set up subscribers;
 // note odd syntax: &ExampleRosClass::subscriberCallback is a pointer to a member function of ExampleRosClass
 // "this" keyword is required, to refer to the current instance of ExampleRosClass
 void MerryPclutils::initializeSubscribers() {
@@ -158,7 +158,7 @@ Eigen::Vector3f MerryPclutils::get_top_point(pcl::PointCloud<pcl::PointXYZ>::Ptr
 bool MerryPclutils::isBlockExist() {
     //get_top_height
     Eigen::Vector3f pt = get_top_point(pclTransformed_ptr_);
-    int npts = pclTransformed_ptr_->points.size();
+    int npts = pclTransformed_ptr_->points.size();//->width*inputCloud->height;
     int count = 0;
     cout<< "isBlockExist ... " << endl;
 
@@ -168,8 +168,8 @@ bool MerryPclutils::isBlockExist() {
             count++;
         }
     }
-    if(count < pclTransformed_ptr_->points.size()*0.3) return false;
-    return true;
+    if(count < pclTransformed_ptr_->points.size()*0.3) return true;
+    return false;
 }
 
 
