@@ -5,22 +5,28 @@
 #include <cwru_pcl_utils/cwru_pcl_utils.h>
 
 int main(int argc, char** argv) {
+	ROS_INFO("began running main method");
 	ros::init(argc, argv, "merry_motionplanner_action_client");
 	ros::NodeHandle nh;
+
+	ROS_INFO("created node and nodehandle");
 
 	MerryGripper gripper(&nh);
 	MerryMotionplanner motionplanner(&nh);
 	MerryPclutils merry_pcl(&nh);
 	//merry_hmi merry_hmi(&nh);
-
 	CwruPclUtils cwru_pcl_utils(&nh);
+	ROS_INFO("created instances of each library");
 
+	ROS_INFO("attempting to get kinect cloud");
 	while(!cwru_pcl_utils.got_kinect_cloud()) {
 		ROS_INFO("did not receive pointcloud");
 		ros::spinOnce();
 		ros::Duration(1.0).sleep();
 	}
 	ROS_INFO("got a pointcloud");
+
+
 
 	// use this to transform sensor frame to torso frame
 	tf::StampedTransform tf_sensor_frame_to_torso_frame;
@@ -32,7 +38,8 @@ int main(int argc, char** argv) {
 	while(tferr) {
 		tferr = false;
 		try {
-			tf_listener.lookupTransform("torso", "camera_rgb_optical_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
+			tf_listener.lookupTransform("torso", "kinect_pc_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
+			//tf_listener.lookupTransform("torso", "camera_rgb_optical_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
 		} catch(tf::TransformException &exception) {
 			ROS_ERROR("%s", exception.what());
 			tferr = true;
@@ -174,7 +181,7 @@ int main(int argc, char** argv) {
 
 		ros::Duration(0.5).sleep();
 		ros::spinOnce();
-	}
+    }
 
 	return 1;
 }
