@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
 	while(tferr) {
 		tferr = false;
 		try {
-			tf_listener.lookupTransform("torso", "kinect_pc_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
+			tf_listener.lookupTransform("torso", "camera_rgb_optical_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
 		} catch(tf::TransformException &exception) {
 			ROS_ERROR("%s", exception.what());
 			tferr = true;

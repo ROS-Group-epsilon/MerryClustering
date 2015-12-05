@@ -26,8 +26,9 @@ cs_add_executable(merry_motionplanner_test src/merry_motionplanner_test.cpp)
 
 # target_link_libraries
 target_link_libraries(merry_motionplanner_main merry_motionplanner ${catkin_LIBRARIES})
+target_link_libraries(merry_motionplanner_main merry_motionplanner ${catkin_LIBRARIES})
 target_link_libraries(merry_motionplanner_main merry_gripper ${catkin_LIBRARIES})
-target_link_libraries(merry_motionplanner_test merry_motionplanner ${catkin_LIBRARIES})
+
 
 cs_install()
 cs_export()

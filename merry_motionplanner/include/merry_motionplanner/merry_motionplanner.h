@@ -9,11 +9,11 @@
 #include <actionlib/client/simple_action_client.h>
 #include <actionlib/client/terminal_state.h>
 #include <cwru_action/cwru_baxter_cart_moveAction.h>
+#
 
 class MerryMotionplanner {
 public:
 	MerryMotionplanner(ros::NodeHandle* nodehandle);
-
 	~MerryMotionplanner() {
 	}
 
