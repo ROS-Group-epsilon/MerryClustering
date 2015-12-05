@@ -1,6 +1,6 @@
 #include <merry_gripper/merry_gripper.h>
-//#include <merry_pcl/merry_pcl.h>
-//#include <merry_hmi/merry_hmi.h>
+#include <merry_pcl_utils/merry_pcl_utils.h>
+#include <merry_hmi/merry_hmi.h>
 #include <merry_motionplanner/merry_motionplanner.h>
 #include <cwru_pcl_utils/cwru_pcl_utils.h>
 
@@ -10,8 +10,8 @@ int main(int argc, char** argv) {
 
 	MerryGripper gripper(&nh);
 	MerryMotionplanner motionplanner(&nh);
-	//MerryPcl merry_pcl(&nh);
-	//merry_hmi merry_hmi(&nh);
+	MerryPclutils merry_pcl(&nh);
+	merry_hmi merry_hmi(&nh);
 
 	CwruPclUtils cwru_pcl_utils(&nh);
 
@@ -103,42 +103,39 @@ int main(int argc, char** argv) {
 
 			gripper.grasp();
 
+			Eigen::VectorXd q_vec_pose;
+			q_vec_pose << 0, 0, 0, 0, 0, 0, 0;
 			/*
-			Vectorq7x1 q_vec_pose;
-			if(color = red) {
-				//get these numbers from my_interesting_moves code
-				//hard code in positions for each block
+			if(color == red) {
 				q_vec_pose << 0.8, -0.3, 0, 1, 0, 0.8, 0; //from move to center
 
-			} else if(color = green) {
+			} else if(color == green) {
 				q_vec_pose << 1.2, -0.2, 0, 0.8, 0, 0.8, 0; //from move to left
 
-			} else if(color = blue) {
+			} else if(color == blue) {
 				q_vec_pose << 0.4, -0.2, 0, 0.8, 0, 0.8, 0; //from move to right
 
-			} else if(color = black) {
+			} else if(color == black) {
 				q_vec_pose << 0.8, -0.6, 0, 2, 0, 0.6, 0; //from move to center behind
 
-			} else if(color = white) {
+			} else if(color == white) {
 				q_vec_pose << 1.2, -0.4, 0, 1.5, 0.6, 1, 0; //from move to left behind
 
-			} else if(color = wood) {
+			} else if(color == wood) {
 				q_vec_pose << 0.4, -0.4, 0, 1.5, -0.6, 1, 0; //from move to right behind
 			} else {
 				ROS_WARN("Color of block could not be determined.");
 				return 0;
 			}
+			*/
 
-			*/
-			//go to hard coded position with:
-			/*
-			plan path
-			if rtn_val = SUCCESS{
-				execute motion plan
+			rtn_val = motionplanner.rt_arm_plan_jspace_path_current_to_qgoal(q_vec_pose);
+			if (rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
+				rtn_val = motionplanner.rt_arm_execute_planned_path();
 			} else {
-				return
+				ROS_WARN("Joint space path to desired pose is not achievable.");
+				return 0;
 			}
-			*/
 
 			gripper.release();
 
