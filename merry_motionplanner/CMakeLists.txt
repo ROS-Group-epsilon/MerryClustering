@@ -22,12 +22,14 @@ cs_add_library(merry_motionplanner src/merry_motionplanner.cpp)
 
 # Executables
 cs_add_executable(merry_motionplanner_main src/merry_motionplanner_main.cpp)
-cs_add_executable(merry_motionplanner_test src/merry_motionplanner_test.cpp)
+#cs_add_executable(merry_motionplanner_test src/merry_motionplanner_test.cpp)
 
 # target_link_libraries
 target_link_libraries(merry_motionplanner_main merry_motionplanner ${catkin_LIBRARIES})
 target_link_libraries(merry_motionplanner_main merry_gripper ${catkin_LIBRARIES})
-target_link_libraries(merry_motionplanner_test merry_motionplanner ${catkin_LIBRARIES})
+target_link_libraries(merry_motionplanner_main merry_pcl_utils ${catkin_LIBRARIES})
+target_link_libraries(merry_motionplanner_main merry_hmi ${catkin_LIBRARIES})
+#target_link_libraries(merry_motionplanner_test merry_motionplanner ${catkin_LIBRARIES})
 
 cs_install()
 cs_export()

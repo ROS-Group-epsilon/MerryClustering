@@ -52,8 +52,8 @@
   <build_depend>cwru_pcl_utils</build_depend>
   <build_depend>cmake_modules</build_depend>
   <build_depend>merry_gripper</build_depend>
-  <!-- <build_depend>merry_pcl</build_depend>
-  <build_depend>merry_hmi</build_depend> -->
+  <build_depend>merry_pcl_utils</build_depend>
+  <build_depend>merry_hmi</build_depend>
 
   <run_depend>roscpp</run_depend>
   <!-- <run_depend>rospy</run_depend> -->
@@ -67,8 +67,8 @@
   <run_depend>cwru_pcl_utils</run_depend>
   <run_depend>cmake_modules</run_depend>
   <run_depend>merry_gripper</run_depend>
-  <!-- <run_depend>merry_pcl</run_depend>
-  <run_depend>merry_hmi</run_depend> -->
+  <run_depend>merry_pcl_utils</run_depend>
+  <run_depend>merry_hmi</run_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
