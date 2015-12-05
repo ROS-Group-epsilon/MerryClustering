@@ -8,6 +8,7 @@ find_package(cmake_modules REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(PCL 1.7 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
+include_directories(${PCL_INCLUDE_DIRS})
 add_definitions(${EIGEN_DEFINITIONS})
 
 # example boost usage
@@ -28,7 +29,7 @@ cs_add_executable(merry_motionplanner_main src/merry_motionplanner_main.cpp)
 target_link_libraries(merry_motionplanner_main merry_motionplanner ${catkin_LIBRARIES})
 target_link_libraries(merry_motionplanner_main merry_gripper ${catkin_LIBRARIES})
 target_link_libraries(merry_motionplanner_main merry_pcl_utils ${catkin_LIBRARIES})
-target_link_libraries(merry_motionplanner_main merry_hmi ${catkin_LIBRARIES})
+#target_link_libraries(merry_motionplanner_main merry_hmi ${catkin_LIBRARIES})
 #target_link_libraries(merry_motionplanner_test merry_motionplanner ${catkin_LIBRARIES})
 
 cs_install()
