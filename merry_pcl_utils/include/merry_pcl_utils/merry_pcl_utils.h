@@ -28,6 +28,7 @@
 #include <pcl/ros/conversions.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/filters/extract_indices.h>
+//#include <pcl/filters/crop_box.h>
 #include <pcl_ros/transforms.h>
 #include <pcl-1.7/pcl/impl/point_types.hpp>
 
@@ -45,27 +46,43 @@ public:
 	pcl::PointCloud<pcl::PointXYZ>::Ptr getKinectCloud() { return pclKinect_ptr_; };
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr getKinectColorCloud() { return pclKinect_clr_ptr_; };
 	pcl::PointCloud<pcl::PointXYZ>::Ptr getTransformedKinectCloud() { return pclTransformed_ptr_; };
+	pcl::PointCloud<pcl::PointXYZ>::Ptr getGenPurposeCloud() { return pclGenPurposeCloud_ptr_; };
 
 	void save_kinect_snapshot() { pcl::io::savePCDFileASCII ("kinect_snapshot.pcd", *pclKinect_ptr_); };
 	void save_kinect_clr_snapshot() { pcl::io::savePCDFileASCII ("kinect_clr_snapshot.pcd", *pclKinect_clr_ptr_); };
 
+	// used when output a plane point cloud
  	Eigen::Vector3f get_centroid(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr);
-	Eigen::Vector3f get_plane_normal(Eigen::MatrixXf points_mat);
-	Eigen::Vector3f get_major_axis(Eigen::MatrixXf points_mat);
+	Eigen::Vector3f get_plane_normal(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr);
+	Eigen::Vector3f get_major_axis(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr);
 
-	int get_point_color(Eigen::Vector3d pt_color);
+	// output pcl cloud
 	void get_transformed_extracted_points(pcl::PointCloud<pcl::PointXYZ> & outputCloud);
 	void get_general_purpose_cloud(pcl::PointCloud<pcl::PointXYZ> & outputCloud);
 
 	bool got_kinect_cloud() { return got_kinect_cloud_; };
 	bool got_extracted_points() {return got_extracted_points_;};
-	void extract_coplanar_pcl_operation(Eigen::Vector3f centroid);
+	
+	// transformation needed
 	Eigen::Affine3f transformTFToEigen(const tf::Transform &t);
 	void transform_kinect_cloud(Eigen::Affine3f A);
 	void transform_selected_points_cloud(Eigen::Affine3f A);
 
-	float top_height(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud);
+	// most relevant to project MerryClustering
+	Eigen::Vector3f get_top_point(pcl::PointCloud<pcl::PointXYZ>::Ptr inputCloud);
+	void extract_coplanar_pcl_operation(Eigen::Vector3f centroid);
+	int detect_color(Eigen::Vector3d pt_color);
+	void find_indices_color_match(vector<int> &input_indices,
+                    Eigen::Vector3d normalized_avg_color,
+                    double color_match_thresh, vector<int> &output_indices);
+	void find_coplanar_pts_z_height(double plane_height,double z_eps,vector<int> &indices);
+	void filter_cloud_z(double z_nom, double z_eps, 
+                double radius, Eigen::Vector3f centroid, vector<int> &indices);
+	void filter_cloud_z(PointCloud<pcl::PointXYZ>::Ptr inputCloud, double z_nom, double z_eps, 
+                double radius, Eigen::Vector3f centroid, vector<int> &indices);
+	void filter_cloud_z(PointCloud<pcl::PointXYZ>::Ptr inputCloud, double z_nom, double z_eps, vector<int> &indices);
 	Eigen::Vector3d find_avg_color(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pclKinect_clr_ptr_);
+	Eigen::Vector3d find_avg_color_selected_pts(vector<int> &indices);
 
 private:
 	// member variables
@@ -110,6 +127,7 @@ private:
 
 	void transform_cloud(Eigen::Affine3f A, pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_ptr, pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud_ptr);
 	double distance_between(Eigen::Vector3f pt1, Eigen::Vector3f pt2);
+	bool isWithinRadius(Eigen::Vector3f pt, Eigen::Vector3f centroid, double radius);
 };
 
 #endif

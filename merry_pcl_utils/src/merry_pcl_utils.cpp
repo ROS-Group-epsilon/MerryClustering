@@ -47,51 +47,28 @@ void MerryPclutils::kinectCB(const sensor_msgs::PointCloud2ConstPtr& cloud) {
         pcl::fromROSMsg(*cloud, *pclKinect_clr_ptr_);
         ROS_INFO("kinectCB: got cloud with %d * %d points", (int) pclKinect_ptr_->width, (int) pclKinect_ptr_->height);
         got_kinect_cloud_ = true; //cue to "main" that callback received and saved a pointcloud 
-        
-/*        //check some colors:
-        int npts_clr = pclKinect_clr_ptr_->points.size();
-        cout << "Kinect color pts size = " << npts_clr << endl;
-        avg_color_ = find_avg_color();*/
     }
 }
 
 void MerryPclutils::extractCB(const sensor_msgs::PointCloud2ConstPtr& cloud) {
-    ROS_INFO("Extracting ... "); 
+    ROS_INFO("Extracting ... ");
+    printf ("Cloud: width = %d, height = %d\n", cloud->width, cloud->height);
 }
 
 Eigen::Vector3f MerryPclutils::get_centroid(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr) {
     return compute_centroid(cloud_ptr);
 }
 
-Eigen::Vector3f MerryPclutils::get_plane_normal(Eigen::MatrixXf points_mat) {
-    compute_plane_normal_and_major_axis(points_mat);
+Eigen::Vector3f MerryPclutils::get_plane_normal(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr) {
+    compute_plane_normal_and_major_axis(cloud_ptr);
     return plane_normal_;
 }
 
-Eigen::Vector3f MerryPclutils::get_major_axis(Eigen::MatrixXf points_mat) {
-    compute_plane_normal_and_major_axis(points_mat);
+Eigen::Vector3f MerryPclutils::get_major_axis(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr) {
+    compute_plane_normal_and_major_axis(cloud_ptr);
     return major_axis_;
 }
 
-//code to try and match found color to a specific color
-int MerryPclutils::get_point_color(Eigen::Vector3d pt_color){
-    // process the input color message
-    int r = pt_color(0);
-    int g = pt_color(1);
-    int b = pt_color(2);
-    // tolerance
-    int tolerance = 100;
-
-    if(isRed(r,g,b,tolerance)) return RED;
-    if(isGreen(r,g,b,tolerance)) return GREEN;
-    if(isBlue(r,g,b,tolerance)) return BLUE;
-    if(isBlack(r,g,b,tolerance)) return BLACK;
-    if(isWhite(r,g,b,tolerance)) return WHITE;
-    if(isWoodcolor(r,g,b,tolerance)) return WOODCOLOR;
-
-    //ROS_INFO("color undefined");
-    return NONE;
-}
 
 void MerryPclutils::get_transformed_extracted_points(pcl::PointCloud<pcl::PointXYZ> & outputCloud) {
     int npts = pclTransformedExtractedPoints_ptr_->points.size(); //how many points to extract
@@ -100,7 +77,7 @@ void MerryPclutils::get_transformed_extracted_points(pcl::PointCloud<pcl::PointX
     outputCloud.width = npts;
     outputCloud.height = 1;
 
-    cout << "copying cloud w/ npts =" << npts << endl;
+    //cout << "copying cloud w/ npts =" << npts << endl;
     outputCloud.points.resize(npts);
     for (int i = 0; i < npts; ++i) {
         outputCloud.points[i].getVector3fMap() = pclTransformedExtractedPoints_ptr_->points[i].getVector3fMap();   
@@ -116,40 +93,14 @@ void MerryPclutils::get_general_purpose_cloud(pcl::PointCloud<pcl::PointXYZ> & o
     outputCloud.width = npts;
     outputCloud.height = 1;
 
-    cout << "copying cloud w/ npts =" << npts << endl;
+    //cout << "copying cloud w/ npts =" << npts << endl;
     outputCloud.points.resize(npts);
     for (int i = 0; i < npts; ++i) {
         outputCloud.points[i].getVector3fMap() = pclGenPurposeCloud_ptr_->points[i].getVector3fMap();
-        cout << "copying point num = " << i << endl;  
+        //cout << "copying point num = " << i << endl;  
     }    
 } 
 
-/**
-    This function is to extract the plane that colanar with the extracted patch.
-*/
-void MerryPclutils::extract_coplanar_pcl_operation(Eigen::Vector3f centroid) {
-    int npts = pclTransformed_ptr_->points.size(); //number of points in kinect point cloud
-    //pclGenPurposeCloud_ptr_->points.resize(npts);
-
-    cout<< "coplanar ... " << endl;
-
-    for (int i = 0; i < npts; ++i) {
-        if( distance_between( centroid, pclTransformed_ptr_->points[i].getVector3fMap() ) < 1.5
-                && ( centroid[2] - pclTransformed_ptr_->points[i].getVector3fMap()[2] ) < 0.000001
-                && ( centroid[2] - pclTransformed_ptr_->points[i].getVector3fMap()[2] ) > -0.000001 ) {
-
-            cout << "height of centroid = " << centroid[2] << endl;
-            cout << "the height of point " << i << "= " << pclTransformed_ptr_->points[i].getVector3fMap()[2] << endl;
-            pclGenPurposeCloud_ptr_->points.push_back(pclTransformed_ptr_->points[i]);
-        }  
-    }
-
-    pclGenPurposeCloud_ptr_->header = pclTransformedExtractedPoints_ptr_->header;
-    pclGenPurposeCloud_ptr_->is_dense = pclTransformedExtractedPoints_ptr_->is_dense;
-    pclGenPurposeCloud_ptr_->width = npts;
-    pclGenPurposeCloud_ptr_->height = 1; 
-
-} 
 
 Eigen::Affine3f MerryPclutils::transformTFToEigen(const tf::Transform &t) {
     Eigen::Affine3f e;
@@ -182,26 +133,163 @@ void MerryPclutils::transform_selected_points_cloud(Eigen::Affine3f A) {
 
 
 // code to determine the height of the top surface of the block
-float MerryPclutils::top_height(pcl::PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
-	float block_height = -DBL_MAX;
-	int npts = inputCloud->width * inputCloud->height;
-	pcl::PointXYZRGB so_many_points;
+Eigen::Vector3f MerryPclutils::get_top_point(pcl::PointCloud<pcl::PointXYZ>::Ptr inputCloud){
+	float top_height = -DBL_MAX;
+    //float max = -DBL_MAX, min = DBL_MAX;
+	int npts = inputCloud->points.size();//->width*inputCloud->height;
+	pcl::PointXYZ pt, top_point;
+    //Eigen::Vector3f centroid = compute_centroid(inputCloud);
 	for(int i = 0; i < npts; i++){
-		if(inputCloud->points[i].z > block_height){
-			so_many_points = inputCloud->points[i];
-			block_height = so_many_points.z;
+        pt = inputCloud->points[i];
+		if(pt.z > top_height && pt.x > 0.5) {
+            //cout<<i<<endl;
+			top_height = pt.z;
+            top_point = pt;
+            //cout<<"top_height = "<< top_height <<endl;
 		}
 	}
-	ROS_INFO("Block at height %f found.", block_height);
-	return block_height;
+	ROS_INFO("Top height %f found.", top_height);
+    ROS_INFO("top_point.x = %f; top_point.y = %f; top_point.z = %f", top_point.x, top_point.y, top_point.z);
+	return top_point.getVector3fMap();
+}
+
+
+/**
+    This function is to extract the plane that colanar with the extracted patch.
+*/
+void MerryPclutils::extract_coplanar_pcl_operation(Eigen::Vector3f pt) {
+    int npts = pclTransformed_ptr_->points.size(); //number of points in kinect point cloud
+    //pclGenPurposeCloud_ptr_->points.resize(npts);
+
+    cout<< "coplanar ... " << endl;
+
+    for (int i = 0; i < npts; ++i) {
+        if( distance_between(pt, pclTransformed_ptr_->points[i].getVector3fMap()) < 0.5 //&& pclTransformed_ptr_->points[i].x > 0.5) {
+                && fabs(pt[2] - pclTransformed_ptr_->points[i].getVector3fMap()[2]) < 0.001 ) {
+
+            //cout << "height of centroid = " << centroid[2] << endl;
+            cout << "the height of point " << i << "= " << pclTransformed_ptr_->points[i].getVector3fMap()[2] << endl;
+            pclGenPurposeCloud_ptr_->points.push_back(pclTransformed_ptr_->points[i]);
+        }  
+    }
+
+    pclGenPurposeCloud_ptr_->header = pclTransformedExtractedPoints_ptr_->header;
+    pclGenPurposeCloud_ptr_->is_dense = pclTransformedExtractedPoints_ptr_->is_dense;
+    pclGenPurposeCloud_ptr_->width = npts;
+    pclGenPurposeCloud_ptr_->height = 1; 
+
+}
+
+
+//code to try and match found color to a specific color
+int MerryPclutils::detect_color(Eigen::Vector3d pt_color){
+    // process the input color message
+    int r = pt_color(0);
+    int g = pt_color(1);
+    int b = pt_color(2);
+    // tolerance
+    int tolerance = 100;
+
+    if(isRed(r,g,b,tolerance)) return RED;
+    if(isGreen(r,g,b,tolerance)) return GREEN;
+    if(isBlue(r,g,b,tolerance)) return BLUE;
+    if(isBlack(r,g,b,tolerance)) return BLACK;
+    if(isWhite(r,g,b,tolerance)) return WHITE;
+    if(isWoodcolor(r,g,b,tolerance)) return WOODCOLOR;
+
+    //ROS_INFO("color undefined");
+    return NONE;
+}
+
+
+void MerryPclutils::find_indices_color_match(vector<int> &input_indices,
+                    Eigen::Vector3d normalized_avg_color,
+                    double color_match_thresh, vector<int> &output_indices) {
+    Eigen::Vector3d pt_color;
+
+    int npts = input_indices.size();
+    output_indices.clear();
+    int index;
+    int npts_matching = 0;
+
+    for (int i=0;i<npts;i++) {
+        index = input_indices[i];
+        pt_color(0) = (double) pclKinect_clr_ptr_->points[index].r;
+        pt_color(1) = (double) pclKinect_clr_ptr_->points[index].g;
+        pt_color(2) = (double) pclKinect_clr_ptr_->points[index].b;
+        pt_color = pt_color/pt_color.norm(); //compute normalized color
+        if ((normalized_avg_color-pt_color).norm()<color_match_thresh) {
+            output_indices.push_back(index);  //color match, so save this point index
+            npts_matching++;
+        }
+    }   
+    ROS_INFO("found %d color-match points from indexed set",npts_matching); 
+}
+
+
+//operate on transformed Kinect pointcloud:
+void MerryPclutils::find_coplanar_pts_z_height(double plane_height,double z_eps,vector<int> &indices) {
+    filter_cloud_z(pclTransformed_ptr_,plane_height,z_eps,indices);
+}
+
+//special case of above for transformed Kinect pointcloud:
+void MerryPclutils::filter_cloud_z(double z_nom, double z_eps, 
+                double radius, Eigen::Vector3f centroid, vector<int> &indices) {
+   filter_cloud_z(pclTransformed_ptr_, z_nom, z_eps, radius, centroid, indices); // go to the following   
+}
+
+//find points that are both (approx) coplanar at height z_nom AND within "radius" of "centroid"
+void MerryPclutils::filter_cloud_z(PointCloud<pcl::PointXYZ>::Ptr inputCloud, double z_nom, double z_eps, 
+                double radius, Eigen::Vector3f centroid, vector<int> &indices)  {
+    int npts = inputCloud->points.size();
+    Eigen::Vector3f pt;
+    indices.clear();
+    double dz;
+    int ans;
+    for (int i = 0; i < npts; ++i) {
+        pt = inputCloud->points[i].getVector3fMap();
+        //cout<<"pt: "<<pt.transpose()<<endl;
+        dz = pt[2] - z_nom;
+        if (fabs(dz) < z_eps) {
+            //passed z-test; do radius test:
+            if (distance_between(pt, pclTransformed_ptr_->points[i].getVector3fMap()) < radius) {
+               indices.push_back(i);
+            }
+            //cout<<"dz = "<<dz<<"; saving this point...enter 1 to continue: ";
+            //cin>>ans;
+        }
+    }
+    int n_extracted = indices.size();
+    cout << " number of points in range = " << n_extracted << endl;  
+}
+
+
+void MerryPclutils::filter_cloud_z(PointCloud<pcl::PointXYZ>::Ptr inputCloud, double z_nom, double z_eps, vector<int> &indices) {
+    int npts = inputCloud->points.size();
+    Eigen::Vector3f pt;
+    indices.clear();
+    double dz;
+    int ans;
+    for (int i = 0; i < npts; ++i) {
+        pt = inputCloud->points[i].getVector3fMap();
+        //cout<<"pt: "<<pt.transpose()<<endl;
+        dz = pt[2] - z_nom;
+        if (fabs(dz) < z_eps) {
+            indices.push_back(i);
+            //cout<<"dz = "<<dz<<"; saving this point...enter 1 to continue: ";
+            //cin>>ans;
+        }
+    }
+    int n_extracted = indices.size();
+    cout << " number of points in range = " << n_extracted << endl;
 }
 
 
 // code to get avg. color. Comb through kinect colors and compute average color. (Disregard color=0,0,0) 
 Eigen::Vector3d MerryPclutils::find_avg_color(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pclKinect_clr_ptr_){
-	Eigen::Vector3d avg_color;
+    Eigen::Vector3d avg_color;
     Eigen::Vector3d ref_color;
-    ref_color<<147,147,147;
+    ref_color << 147,147,147;
     int npts2 = pclKinect_clr_ptr_->points.size();
     int npts2_colored = 0;
     for (int i=0;i<npts2;i++) {
@@ -218,8 +306,31 @@ Eigen::Vector3d MerryPclutils::find_avg_color(pcl::PointCloud<pcl::PointXYZRGB>:
     ROS_INFO("found %d points with interesting color",npts2_colored);
     avg_color/=npts2_colored;
     ROS_INFO("avg interesting color = %f, %f, %f",avg_color(0),avg_color(1),avg_color(2));
-	return avg_color;
+    return avg_color;
 }
+
+
+
+Eigen::Vector3d MerryPclutils::find_avg_color_selected_pts(vector<int> &indices) {
+    Eigen::Vector3d avg_color;
+    Eigen::Vector3d pt_color;
+    //Eigen::Vector3d ref_color;
+
+    int npts = indices.size();
+    int index;
+
+    for (int i=0;i<npts;i++) {
+        index = indices[i];
+        pt_color(0) = (double) pclKinect_clr_ptr_->points[index].r;
+        pt_color(1) = (double) pclKinect_clr_ptr_->points[index].g;
+        pt_color(2) = (double) pclKinect_clr_ptr_->points[index].b;
+        avg_color += pt_color;
+    }
+    avg_color /= npts;
+    ROS_INFO("avg color = %f, %f, %f",avg_color(0),avg_color(1),avg_color(2));
+    return avg_color;
+}
+
 
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
@@ -414,146 +525,19 @@ void MerryPclutils::transform_cloud(Eigen::Affine3f A, pcl::PointCloud<pcl::Poin
     }
 }
 
+
 double MerryPclutils::distance_between(Eigen::Vector3f pt1, Eigen::Vector3f pt2) {
     Eigen::Vector3f pt = pt1 - pt2;
-    double distance = pt(0)*pt(0) + pt(1)*pt(1) + pt(2)*pt(2);
+    double distance = pt.norm();//pt(0)*pt(0) + pt(1)*pt(1) + pt(2)*pt(2);
     return distance;
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*void find_indices_color_match(vector<int> &input_indices,
-                    Eigen::Vector3d normalized_avg_color,
-                    double color_match_thresh, vector<int> &output_indices) {
-     Eigen::Vector3d pt_color;
-
-    int npts = input_indices.size();
-    output_indices.clear();
-    int index;
-    int npts_matching = 0;
-
-    for (int i=0;i<npts;i++) {
-        index = input_indices[i];
-        pt_color(0) = (double) pclKinect_clr_ptr_->points[index].r;
-        pt_color(1) = (double) pclKinect_clr_ptr_->points[index].g;
-        pt_color(2) = (double) pclKinect_clr_ptr_->points[index].b;
-        pt_color = pt_color/pt_color.norm(); //compute normalized color
-        if ((normalized_avg_color-pt_color).norm()<color_match_thresh) {
-            output_indices.push_back(index);  //color match, so save this point index
-            npts_matching++;
-        }
-    }   
-    ROS_INFO("found %d color-match points from indexed set",npts_matching);
-    
-} 
-
-//find points that are both (approx) coplanar at height z_nom AND within "radius" of "centroid"
-void CwruPclUtils::filter_cloud_z(PointCloud<pcl::PointXYZ>::Ptr inputCloud, double z_nom, double z_eps, 
-                double radius, Eigen::Vector3f centroid, vector<int> &indices)  {
-    int npts = inputCloud->points.size();
-    Eigen::Vector3f pt;
-    indices.clear();
-    double dz;
-    int ans;
-    for (int i = 0; i < npts; ++i) {
-        pt = inputCloud->points[i].getVector3fMap();
-        //cout<<"pt: "<<pt.transpose()<<endl;
-        dz = pt[2] - z_nom;
-        if (fabs(dz) < z_eps) {
-            //passed z-test; do radius test:
-            if ((pt-centroid).norm()<radius) {
-               indices.push_back(i);
-            }
-            //cout<<"dz = "<<dz<<"; saving this point...enter 1 to continue: ";
-            //cin>>ans;
-        }
-    }
-    int n_extracted = indices.size();
-    cout << " number of points in range = " << n_extracted << endl;    
-    
+bool MerryPclutils::isWithinRadius(Eigen::Vector3f pt, Eigen::Vector3f centroid, double radius) {
+    if(fabs(pt[0]-centroid[0]) < radius && fabs(pt[1]-centroid[1]) < radius) return true;
+    return false;
 }
 
-void CwruPclUtils::analyze_selected_points_color() {
-    int npts = pclTransformedSelectedPoints_ptr_->points.size(); //number of points
-    //copy_cloud(pclTransformedSelectedPoints_ptr_,pclGenPurposeCloud_ptr_); //now have a copy of the selected points in gen-purpose object
-    //Eigen::Vector3f offset;
-    //offset<<0,0,0.05;
-    int npts_clr = pclSelectedPtsClr_ptr_->points.size();
-    cout<<"color pts size = "<<npts_clr<<endl;
-        pcl::PointXYZRGB p;
-        // unpack rgb into r/g/b
-        uint32_t rgb = *reinterpret_cast<int*>(&p.rgb);
-        uint8_t r,g,b;
-        int r_int;
-    
-    for (int i = 0; i < npts; ++i) {
-        p = pclSelectedPtsClr_ptr_->points[i];
-        r = (rgb >> 16) & 0x0000ff;
-        r_int = (int) r;
-        // g = (rgb >> 8)  & 0x0000ff;
-        // b = (rgb)       & 0x0000ff;
-        cout<<"r_int: "<<r_int<<endl;
-        cout<<"r1: "<<r<<endl;
-        r=pclSelectedPtsClr_ptr_->points[i].r;
-        cout<<"r2 = "<<r<<endl;
- 
-        //cout<<" ipt, r,g,b = "<<i<<","<<pclSelectedPtsClr_ptr_->points[i].r<<", "<<
-        //        pclSelectedPtsClr_ptr_->points[i].g<<", "<<pclSelectedPtsClr_ptr_->points[i].b<<endl;
-        //pclGenPurposeCloud_ptr_->points[i].getVector3fMap() = pclGenPurposeCloud_ptr_->points[i].getVector3fMap()+offset;   
-    }    
-        cout<<"done combing through selected pts"<<endl;
-        got_kinect_cloud_=false; // get a new snapshot
-} 
-*////////////////////////////////
+
+
+
