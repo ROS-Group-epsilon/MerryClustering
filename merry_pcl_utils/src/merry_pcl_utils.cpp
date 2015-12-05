@@ -158,6 +158,7 @@ Eigen::Vector3f MerryPclutils::get_top_point(pcl::PointCloud<pcl::PointXYZ>::Ptr
 bool MerryPclutils::isBlockExist() {
     //get_top_height
     Eigen::Vector3f pt = get_top_point(pclTransformed_ptr_);
+    int npts = pclTransformed_ptr_->points.size();//->width*inputCloud->height;
     int count = 0;
     cout<< "isBlockExist ... " << endl;
 
