@@ -299,10 +299,50 @@ geometry_msgs::Pose MerryMotionplanner::transformEigenAffine3dToPose(Eigen::Affi
     pose.orientation.x = q.x();
     pose.orientation.y = q.y();
     pose.orientation.z = q.z();
-    pose.orientation.x = q.x();
+    pose.orientation.w = q.w();
 
     return pose;
 }
+
+/* **********************************most relevant******************************************* */
+//centroid, plane_normal, major_axis
+//Rmat, origin_des
+Eigen::Matrix3d MerryMotionplanner::compute_orientation(Eigen::Vector3f plane_normal, Eigen::Vector3f major_axis) {
+    Eigen::Vector3d xvec_des, yvec_des, zvec_des;
+    Eigen::Matrix3d Rmat;
+    for (int i = 0; i < 3; i++) {
+        zvec_des[i] = -plane_normal[i]; //want tool z pointing OPPOSITE surface normal
+        xvec_des[i] = major_axis[i];
+    }
+    yvec_des = zvec_des.cross(xvec_des); //construct consistent right-hand triad
+    Rmat.col(0)= xvec_des;
+    Rmat.col(1)= yvec_des;
+    Rmat.col(2)= zvec_des;
+    return Rmat;
+}
+
+
+Eigen::Vector3d MerryMotionplanner::compute_origin_des(Eigen::Vector3f centroid) {
+    Eigen::Vector3d origin_des;
+    for (int i = 0; i < 3; i++) {
+        origin_des[i] = centroid[i]; // convert to double precision
+    }
+    origin_des[2] += 0.02; //raise up 2cm
+}
+
+
+//construct a goal affine pose:
+Eigen::Affine3d MerryMotionplanner::construct_affine_pose(Eigen::Matrix3d orientation, Eigen::Vector3d des) {
+    Eigen::Affine3d Affine_des_gripper;       
+    Affine_des_gripper.linear() = orientation;
+    Affine_des_gripper.translation() = des;
+    cout << "des origin: " << Affine_des_gripper.translation().transpose() << endl;
+    cout << "orientation: " << endl;
+    cout << orientation << endl;
+    return Affine_des_gripper;
+}
+
+
 
 
 /****************************************************************

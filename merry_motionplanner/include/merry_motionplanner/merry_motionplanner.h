@@ -78,6 +78,11 @@ public:
 	Eigen::Affine3d transformPoseToEigenAffine3d(geometry_msgs::Pose pose);
 	geometry_msgs::Pose transformEigenAffine3dToPose(Eigen::Affine3d e);
 
+	// most relevant for project
+	Eigen::Matrix3d compute_orientation(Eigen::Vector3f plane_normal, Eigen::Vector3f major_axis);
+	Eigen::Vector3d compute_origin_des(Eigen::Vector3f centroid);
+	Eigen::Affine3d construct_affine_pose(Eigen::Matrix3d orientation, Eigen::Vector3d des);
+
 
 private:
 	ros::NodeHandle nh_;

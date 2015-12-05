@@ -2,49 +2,14 @@
 #include <merry_motionplanner/merry_motionplanner.h>
 
 
-//centroid, plane_normal, major_axis
-//Rmat, origin_des
-Eigen::Matrix3d compute_orientation(Eigen::Vector3f plane_normal, Eigen::Vector3f major_axis) {
-    Eigen::Vector3d xvec_des, yvec_des, zvec_des;
-    Eigen::Matrix3d Rmat;
-    for (int i = 0; i < 3; i++) {
-        zvec_des[i] = -plane_normal[i]; //want tool z pointing OPPOSITE surface normal
-        xvec_des[i] = major_axis[i];
-    }
-    yvec_des = zvec_des.cross(xvec_des); //construct consistent right-hand triad
-    Rmat.col(0)= xvec_des;
-    Rmat.col(1)= yvec_des;
-    Rmat.col(2)= zvec_des;
-    return Rmat;
-}
-
-Eigen::Vector3d compute_origin_des(Eigen::Vector3f centroid) {
-    Eigen::Vector3d origin_des;
-    for (int i = 0; i < 3; i++) {
-        origin_des[i] = centroid[i]; // convert to double precision
-    }
-    origin_des[2] += 0.02; //raise up 2cm
-}
-
-
-//construct a goal affine pose:
-Eigen::Affine3d construct_affine_pose(Eigen::Matrix3d orientation, Eigen::Vector3d des) {
-    Eigen::Affine3d Affine_des_gripper;       
-    Affine_des_gripper.linear() = orientation;
-    Affine_des_gripper.translation() = des;
-    cout << "des origin: " << Affine_des_gripper.translation().transpose() << endl;
-    cout << "orientation: " << endl;
-    cout << orientation << endl;
-    return Affine_des_gripper;
-}
-
-
 int main(int argc, char** argv) {
     ros::init(argc, argv, "merry_motionplanner_test"); // name this node 
     ros::NodeHandle nh; //standard ros node handle
 
     MerryMotionplanner merry_motionplanner(&nh);
     CwruPclUtils cwru_pcl_utils(&nh);
+
+
     while (!cwru_pcl_utils.got_kinect_cloud()) {
         ROS_INFO("did not receive pointcloud");
         ros::spinOnce();
@@ -104,11 +69,11 @@ int main(int argc, char** argv) {
 
             //input: centroid, plane_normal, major_axis
             //output: Rmat, origin_des
-            origin_des = compute_origin_des(centroid);
-            Rmat = compute_orientation(plane_normal, major_axis);
+            origin_des = merry_motionplanner.compute_origin_des(centroid);
+            Rmat = merry_motionplanner.compute_orientation(plane_normal, major_axis);
 
             //construct a goal affine pose:
-            Affine_des_gripper = construct_affine_pose(Rmat, origin_des);
+            Affine_des_gripper = merry_motionplanner.construct_affine_pose(Rmat, origin_des);
 
             //convert des pose from Eigen::Affine to geometry_msgs::PoseStamped
             rt_tool_pose.pose = merry_motionplanner.transformEigenAffine3dToPose(Affine_des_gripper);
