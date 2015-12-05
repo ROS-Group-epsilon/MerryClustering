@@ -70,6 +70,7 @@ public:
 
 	// most relevant to project MerryClustering
 	Eigen::Vector3f get_top_point(pcl::PointCloud<pcl::PointXYZ>::Ptr inputCloud);
+	bool isBlockExist();
 	void extract_coplanar_pcl_operation(Eigen::Vector3f centroid);
 	int detect_color(Eigen::Vector3d pt_color);
 	void find_indices_color_match(vector<int> &input_indices,
