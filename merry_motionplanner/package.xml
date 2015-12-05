@@ -51,9 +51,17 @@
   <build_depend>tf</build_depend>
   <build_depend>cwru_pcl_utils</build_depend>
   <build_depend>cmake_modules</build_depend>
+<<<<<<< HEAD
   <build_depend>merry_gripper</build_depend>
   <build_depend>merry_pcl_utils</build_depend>
   <build_depend>merry_hmi</build_depend>
+=======
+  <build_depend>pcl_ros</build_depend>
+  <build_depend>pcl_conversions</build_depend>
+  <build_depend>merry_gripper</build_depend>
+  <build_depend>merry_pcl_utils</build_depend>
+  <!-- <build_depend>merry_hmi</build_depend> -->
+>>>>>>> Emma
 
   <run_depend>roscpp</run_depend>
   <!-- <run_depend>rospy</run_depend> -->
@@ -66,9 +74,17 @@
   <run_depend>tf</run_depend>
   <run_depend>cwru_pcl_utils</run_depend>
   <run_depend>cmake_modules</run_depend>
+<<<<<<< HEAD
   <run_depend>merry_gripper</run_depend>
   <run_depend>merry_pcl_utils</run_depend>
   <run_depend>merry_hmi</run_depend>
+=======
+  <run_depend>pcl_ros</run_depend>
+  <run_depend>pcl_conversions</run_depend>
+  <run_depend>merry_gripper</run_depend>
+  <run_depend>merry_pcl_utils</run_depend>
+  <!-- <run_depend>merry_hmi</run_depend> -->
+>>>>>>> Emma
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

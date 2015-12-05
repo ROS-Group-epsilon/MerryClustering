@@ -1,6 +1,10 @@
 #include <merry_gripper/merry_gripper.h>
 #include <merry_pcl_utils/merry_pcl_utils.h>
+<<<<<<< HEAD
 #include <merry_hmi/merry_hmi.h>
+=======
+//#include <merry_hmi/merry_hmi.h>
+>>>>>>> Emma
 #include <merry_motionplanner/merry_motionplanner.h>
 #include <cwru_pcl_utils/cwru_pcl_utils.h>
 
@@ -11,7 +15,11 @@ int main(int argc, char** argv) {
 	MerryGripper gripper(&nh);
 	MerryMotionplanner motionplanner(&nh);
 	MerryPclutils merry_pcl(&nh);
+<<<<<<< HEAD
 	merry_hmi merry_hmi(&nh);
+=======
+	//merry_hmi merry_hmi(&nh);
+>>>>>>> Emma
 
 	CwruPclUtils cwru_pcl_utils(&nh);
 
@@ -62,6 +70,7 @@ int main(int argc, char** argv) {
 	}
 
 	while(ros::ok()) {
+<<<<<<< HEAD
 		// TODO CHANGE THIS IF STATEMENT CONDITION TO BE IF BLOCK HAS BEEN FOUND AND NO OBSTRUCTION HAS BEEN FOUND
 		//if( && !merry_hmi.isObstructed()) {
 		if(true) {
@@ -79,6 +88,33 @@ int main(int argc, char** argv) {
 			plane_normal = merry_pcl.get_plane_normal(extracted_plane);
 
 
+=======
+		// the following uses the MerryPclutils library in order to get the centroid, major axis, and plane normal
+		pcl::PointCloud<pcl::PointXYZ>::Ptr kinect_cloud = merry_pcl.getKinectCloud(); // TODO check if this line is needed
+		pcl::PointCloud<pcl::PointXYZRGB>::Ptr kinect_color_cloud = merry_pcl.getKinectColorCloud(); // TODO check if this line is needed
+		pcl::PointCloud<pcl::PointXYZ> display_cloud;
+		pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_kinect_cloud, extracted_plane;
+
+		merry_pcl.transform_kinect_cloud(A_sensor_wrt_torso);
+		transformed_kinect_cloud = merry_pcl.getTransformedKinectCloud();
+		Eigen::Vector3f init_pt = merry_pcl.get_top_point(transformed_kinect_cloud);
+
+
+		if(merry_pcl.isBlockExist() /* && !merry_hmi.isObstructed() */) {
+			ROS_INFO("block has been found");
+
+			merry_pcl.extract_coplanar_pcl_operation(init_pt);
+			merry_pcl.get_general_purpose_cloud(display_cloud);
+			extracted_plane = merry_pcl.getGenPurposeCloud();
+
+			// detemine what the centroid, major axis, and plane normal are
+			centroid = merry_pcl.get_centroid(extracted_plane);
+			major_axis = merry_pcl.get_major_axis(extracted_plane);
+			plane_normal = merry_pcl.get_plane_normal(extracted_plane);
+			ROS_INFO("Found the centroid, major axis, and plane normal!");
+
+			// use the centroid, major axis, and plane normal to determine a goal destination for right arm
+>>>>>>> Emma
 			for(int i = 0; i < 3; i++) {
 				origin_des[i] = centroid[i];
 				zvec_des[i] = -plane_normal[i]; // want tool to point opposite to surface normal
@@ -97,6 +133,10 @@ int main(int argc, char** argv) {
 
 			rt_tool_pose.pose = motionplanner.transformEigenAffine3dToPose(Affine_des_gripper);
 
+<<<<<<< HEAD
+=======
+			// plan path to goal destination and execute path if plan is successful
+>>>>>>> Emma
 			rtn_val = motionplanner.rt_arm_plan_path_current_to_goal_pose(rt_tool_pose);
 			if(rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
 				rtn_val = motionplanner.rt_arm_execute_planned_path();
@@ -107,10 +147,15 @@ int main(int argc, char** argv) {
 
 			gripper.grasp();
 
+<<<<<<< HEAD
+=======
+			// the following uses the MerryPclutils library in order to determine what color the block is
+>>>>>>> Emma
 			Eigen::VectorXd q_vec_pose;
 			vector<int> selected_indices;
 			Eigen::Vector3d avg_color;
 
+<<<<<<< HEAD
 			
 			avg_color = merry_pcl.find_avg_color_selected_pts(selected_indices);
 			
@@ -130,13 +175,43 @@ int main(int argc, char** argv) {
 				q_vec_pose << 1.2, -0.4, 0, 1.5, 0.6, 1, 0; //move to left behind
 
 			} else if(merry_pcl.detect_color(avg_color) == MerryPclutils::WOODCOLOR) {
+=======
+			plane_dist = plane_normal.dot(centroid);
+			double z_eps = 0.005;
+			double radius = 0.5;
+			merry_pcl.filter_cloud_z(plane_dist, z_eps, radius, centroid, selected_indices);
+			avg_color = merry_pcl.find_avg_color_selected_pts(selected_indices);
+			
+			// depending on color of block, will assign a different goal destination
+			if(merry_pcl.detect_color(avg_color) == 0 /*MerryPclutils::COLORS::RED*/) {
+				q_vec_pose << 0.8, -0.3, 0, 1, 0, 0.8, 0; //move to center
+
+			} else if(merry_pcl.detect_color(avg_color) == 1 /*MerryPclutils::COLORS::GREEN*/) {
+				q_vec_pose << 1.2, -0.2, 0, 0.8, 0, 0.8, 0; //move to left
+
+			} else if(merry_pcl.detect_color(avg_color) == 2 /*MerryPclutils::COLORS::BLUE*/) {
+				q_vec_pose << 0.4, -0.2, 0, 0.8, 0, 0.8, 0; //move to right
+
+			} else if(merry_pcl.detect_color(avg_color) == 3 /*MerryPclutils::COLORS::BLACK*/) {
+				q_vec_pose << 0.8, -0.6, 0, 2, 0, 0.6, 0; //move to center behind
+
+			} else if(merry_pcl.detect_color(avg_color) == 4 /*MerryPclutils::COLORS::WHITE*/) {
+				q_vec_pose << 1.2, -0.4, 0, 1.5, 0.6, 1, 0; //move to left behind
+
+			} else if(merry_pcl.detect_color(avg_color) == 5 /*MerryPclutils::COLORS::WOODCOLOR*/) {
+>>>>>>> Emma
 				q_vec_pose << 0.4, -0.4, 0, 1.5, -0.6, 1, 0; //move to right behind
 			} else {
 				ROS_WARN("Color of block could not be determined.");
 				return 0;
 			}
 			
+<<<<<<< HEAD
 
+=======
+			// plan path to goal destination that was determined above
+			// execute motion if path was determined to be successful
+>>>>>>> Emma
 			rtn_val = motionplanner.rt_arm_plan_jspace_path_current_to_qgoal(q_vec_pose);
 			if (rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
 				rtn_val = motionplanner.rt_arm_execute_planned_path();
@@ -147,9 +222,19 @@ int main(int argc, char** argv) {
 
 			gripper.release();
 
+<<<<<<< HEAD
 			rtn_val = motionplanner.plan_move_to_pre_pose();
 			if(rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
 				rtn_val = motionplanner.rt_arm_execute_planned_path();
+=======
+			// go back to pre pose
+			rtn_val = motionplanner.plan_move_to_pre_pose();
+			if(rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
+				rtn_val = motionplanner.rt_arm_execute_planned_path();
+			} else {
+				ROS_WARN("Move to pre pose is not achievable.");
+				return 0;
+>>>>>>> Emma
 			}
 		}
 
