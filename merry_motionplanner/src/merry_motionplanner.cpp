@@ -1,8 +1,6 @@
 #include <merry_motionplanner/merry_motionplanner.h>
 
-/***************************************************************
-*  *******************public member functions*******************
-*/
+/* public member functions */
 MerryMotionplanner::MerryMotionplanner(ros::NodeHandle *nodehandle):nh_(*nodehandle), cart_move_action_client_("cartMoveActionServer", true) {
     ROS_INFO("in constructor of motion planner");
 
@@ -304,9 +302,7 @@ geometry_msgs::Pose MerryMotionplanner::transformEigenAffine3dToPose(Eigen::Affi
     return pose;
 }
 
-/* **********************************most relevant******************************************* */
-//centroid, plane_normal, major_axis
-//Rmat, origin_des
+/* most relevant */
 Eigen::Matrix3d MerryMotionplanner::compute_orientation(Eigen::Vector3f plane_normal, Eigen::Vector3f major_axis) {
     Eigen::Vector3d xvec_des, yvec_des, zvec_des;
     Eigen::Matrix3d Rmat;
@@ -345,9 +341,7 @@ Eigen::Affine3d MerryMotionplanner::construct_affine_pose(Eigen::Matrix3d orient
 
 
 
-/****************************************************************
-*  *******************private member functions*******************
-*/
+/* private member functions */
 
 void MerryMotionplanner::doneCb_(const actionlib::SimpleClientGoalState& state, const cwru_action::cwru_baxter_cart_moveResultConstPtr& result) {
     ROS_INFO("doneCb: server responded with state [%s]", state.toString().c_str());
