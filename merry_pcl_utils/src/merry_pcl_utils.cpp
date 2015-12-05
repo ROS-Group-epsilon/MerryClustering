@@ -154,6 +154,24 @@ Eigen::Vector3f MerryPclutils::get_top_point(pcl::PointCloud<pcl::PointXYZ>::Ptr
 }
 
 
+// use it after transforming the kinect cloud
+bool MerryPclutils::isBlockExist() {
+    //get_top_height
+    Eigen::Vector3f pt = get_top_point(pclTransformed_ptr_);
+    int count = 0;
+    cout<< "isBlockExist ... " << endl;
+
+    for (int i = 0; i < npts; ++i) {
+        if( distance_between(pt, pclTransformed_ptr_->points[i].getVector3fMap()) < 0.5 //&& pclTransformed_ptr_->points[i].x > 0.5) {
+                && fabs(pt[2] - pclTransformed_ptr_->points[i].getVector3fMap()[2]) < 0.001 ) {
+            count++;
+        }
+    }
+    if(count < pclTransformed_ptr_->points.size()*0.3) return false;
+    return true;
+}
+
+
 /**
     This function is to extract the plane that colanar with the extracted patch.
 */
@@ -330,6 +348,8 @@ Eigen::Vector3d MerryPclutils::find_avg_color_selected_pts(vector<int> &indices)
     ROS_INFO("avg color = %f, %f, %f",avg_color(0),avg_color(1),avg_color(2));
     return avg_color;
 }
+
+
 
 
 
