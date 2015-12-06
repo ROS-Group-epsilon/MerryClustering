@@ -134,18 +134,20 @@ void MerryPclutils::transform_selected_points_cloud(Eigen::Affine3f A) {
 
 // code to determine the height of the top surface of the block
 Eigen::Vector3f MerryPclutils::get_top_point(pcl::PointCloud<pcl::PointXYZ>::Ptr inputCloud){
-	float top_height = -DBL_MAX;
+	float top_height = -0.6;//-DBL_MAX;
     //float max = -DBL_MAX, min = DBL_MAX;
 	int npts = inputCloud->points.size();//->width*inputCloud->height;
 	pcl::PointXYZ pt, top_point;
     //Eigen::Vector3f centroid = compute_centroid(inputCloud);
 	for(int i = 0; i < npts; i++){
         pt = inputCloud->points[i];
-		if(pt.z > top_height && pt.x > 0.5) {
-            //cout<<i<<endl;
-			top_height = pt.z;
-            top_point = pt;
-            //cout<<"top_height = "<< top_height <<endl;
+		if(pt.z > top_height) {
+            if(pt.z > -0.6 && pt.z < 0 && pt.x < 1.2 && pt.x > 0.4 && pt.y < 0.3 && pt.y > -0.3) { // limited radius
+                //cout<<i<<endl;
+    			top_height = pt.z;
+                top_point = pt;
+                //cout<<"top_height = "<< top_height <<endl;
+            }
 		}
 	}
 	ROS_INFO("Top height %f found.", top_height);
@@ -164,7 +166,7 @@ bool MerryPclutils::isBlockExist() {
 
     for (int i = 0; i < npts; ++i) {
         if( distance_between(pt, pclTransformed_ptr_->points[i].getVector3fMap()) < 0.5 //&& pclTransformed_ptr_->points[i].x > 0.5) {
-                && fabs(pt[2] - pclTransformed_ptr_->points[i].getVector3fMap()[2]) < 0.001 ) {
+                && fabs(pt[2] - pclTransformed_ptr_->points[i].getVector3fMap()[2]) < 0.01 ) {
             count++;
         }
     }
@@ -184,8 +186,10 @@ void MerryPclutils::extract_coplanar_pcl_operation(Eigen::Vector3f pt) {
 
     for (int i = 0; i < npts; ++i) {
         if( distance_between(pt, pclTransformed_ptr_->points[i].getVector3fMap()) < 0.5 //&& pclTransformed_ptr_->points[i].x > 0.5) {
-                && fabs(pt[2] - pclTransformed_ptr_->points[i].getVector3fMap()[2]) < 0.001 ) {
-
+                && fabs(pt[2] - pclTransformed_ptr_->points[i].getVector3fMap()[2]) < 0.01 ) {
+        //if(pclTransformed_ptr_->points[i].x > 0.4 && pclTransformed_ptr_->points[i].x < 1.2) { // for determining the x radius
+        //if(pclTransformed_ptr_->points[i].y > -0.3 && pclTransformed_ptr_->points[i].y < 0.3) { // for determining the z radius
+        //if(pclTransformed_ptr_->points[i].z > -0.6 && pclTransformed_ptr_->points[i].z < 0) { // for determining the z radius
             //cout << "height of centroid = " << centroid[2] << endl;
             cout << "the height of point " << i << "= " << pclTransformed_ptr_->points[i].getVector3fMap()[2] << endl;
             pclGenPurposeCloud_ptr_->points.push_back(pclTransformed_ptr_->points[i]);
@@ -207,7 +211,7 @@ int MerryPclutils::detect_color(Eigen::Vector3d pt_color){
     int g = pt_color(1);
     int b = pt_color(2);
     // tolerance
-    int tolerance = 100;
+    int tolerance = 10; // initially 100
 
     if(isRed(r,g,b,tolerance)) return RED;
     if(isGreen(r,g,b,tolerance)) return GREEN;
@@ -215,6 +219,7 @@ int MerryPclutils::detect_color(Eigen::Vector3d pt_color){
     if(isBlack(r,g,b,tolerance)) return BLACK;
     if(isWhite(r,g,b,tolerance)) return WHITE;
     if(isWoodcolor(r,g,b,tolerance)) return WOODCOLOR;
+    if(isCancolor(r,g,b,tolerance)) return CANCOLOR;
 
     //ROS_INFO("color undefined");
     return NONE;
@@ -271,7 +276,7 @@ void MerryPclutils::filter_cloud_z(PointCloud<pcl::PointXYZ>::Ptr inputCloud, do
         dz = pt[2] - z_nom;
         if (fabs(dz) < z_eps) {
             //passed z-test; do radius test:
-            if (distance_between(pt, pclTransformed_ptr_->points[i].getVector3fMap()) < radius) {
+            if (distance_between(centroid, pt) < radius) {
                indices.push_back(i);
             }
             //cout<<"dz = "<<dz<<"; saving this point...enter 1 to continue: ";
@@ -452,10 +457,10 @@ void MerryPclutils::compute_plane_normal_and_major_axis(pcl::PointCloud<pcl::Poi
 }
 
 bool MerryPclutils::isRed(int r, int g, int b, int tolerance) {
-    // standard red rgb code
-    int standard_r = 255;
-    int standard_g = 0;
-    int standard_b = 0;
+    // # red: 157, 90, 96
+    int standard_r = 175;
+    int standard_g = 62;
+    int standard_b = 88;
 
     if(abs(standard_r - r) < tolerance && abs(standard_g - g) < tolerance && abs(standard_b - b) < tolerance) {
         ROS_INFO("RED");
@@ -465,10 +470,10 @@ bool MerryPclutils::isRed(int r, int g, int b, int tolerance) {
 }
 
 bool MerryPclutils::isGreen(int r, int g, int b, int tolerance) {
-    // standard red rgb code
-    int standard_r = 255;
-    int standard_g = 0;
-    int standard_b = 0;
+    // # green: 148, 165, 67
+    int standard_r = 148;
+    int standard_g = 165;
+    int standard_b = 67;
 
     if(abs(standard_r - r) < tolerance && abs(standard_g - g) < tolerance && abs(standard_b - b) < tolerance) {
         ROS_INFO("GREEN");
@@ -479,10 +484,10 @@ bool MerryPclutils::isGreen(int r, int g, int b, int tolerance) {
 
 
 bool MerryPclutils::isBlue(int r, int g, int b, int tolerance) {
-    // standard red rgb code
-    int standard_r = 255;
-    int standard_g = 0;
-    int standard_b = 0;
+    // # blue: 114, 147, 177
+    int standard_r = 120;
+    int standard_g = 150;
+    int standard_b = 180;
 
     if(abs(standard_r - r) < tolerance && abs(standard_g - g) < tolerance && abs(standard_b - b) < tolerance) {
         ROS_INFO("BLUE");
@@ -492,10 +497,10 @@ bool MerryPclutils::isBlue(int r, int g, int b, int tolerance) {
 }
 
 bool MerryPclutils::isBlack(int r, int g, int b, int tolerance) {
-    // standard red rgb code
-    int standard_r = 0;
-    int standard_g = 0;
-    int standard_b = 0;
+    // # black: 76, 70, 70
+    int standard_r = 50;
+    int standard_g = 50;
+    int standard_b = 50;
 
     if(abs(standard_r - r) < tolerance && abs(standard_g - g) < tolerance && abs(standard_b - b) < tolerance) {
         ROS_INFO("BLACK");
@@ -505,10 +510,10 @@ bool MerryPclutils::isBlack(int r, int g, int b, int tolerance) {
 }
 
 bool MerryPclutils::isWhite(int r, int g, int b, int tolerance) {
-    // standard red rgb code
-    int standard_r = 255;
-    int standard_g = 255;
-    int standard_b = 255;
+    // # white: 185, 173, 162
+    int standard_r = 220;
+    int standard_g = 220;
+    int standard_b = 220;
 
     if(abs(standard_r - r) < tolerance && abs(standard_g - g) < tolerance && abs(standard_b - b) < tolerance) {
         ROS_INFO("WHITE");
@@ -518,13 +523,26 @@ bool MerryPclutils::isWhite(int r, int g, int b, int tolerance) {
 }
 
 bool MerryPclutils::isWoodcolor(int r, int g, int b, int tolerance) {
-    // standard red rgb code
-    int standard_r = 255;
-    int standard_g = 228;
-    int standard_b = 181;
+    // # woodcolor: 191, 170, 144
+    int standard_r = 191;
+    int standard_g = 170;
+    int standard_b = 144;
 
     if(abs(standard_r - r) < tolerance && abs(standard_g - g) < tolerance && abs(standard_b - b) < tolerance) {
         ROS_INFO("WOODCOLOR");
+        return true;
+    }
+    return false;
+}
+
+bool MerryPclutils::isCancolor(int r, int g, int b, int tolerance) {
+    // standard red rgb code
+    int standard_r = 104;
+    int standard_g = 104;
+    int standard_b = 123;
+
+    if(abs(standard_r - r) < tolerance && abs(standard_g - g) < tolerance && abs(standard_b - b) < tolerance) {
+        ROS_INFO("CANCOLOR");
         return true;
     }
     return false;
@@ -561,4 +579,14 @@ bool MerryPclutils::isWithinRadius(Eigen::Vector3f pt, Eigen::Vector3f centroid,
 
 
 
+// +++++++++++++++++++color test result+++++++++++++++++ //
+// double z_eps = 0.001; //+/- 5mm tolerance
+// double radius = 0.05; // try a 5cm radial search
+
+// # red: 157, 90, 96
+// # green: 148, 165, 67  // 147.873303, 176.350679, 53.459276
+// # blue: 114, 147, 177  //121.093023, 128.584718, 146.425249
+// # black: 76, 70, 70  //58.028061, 53.408163, 52.683673
+// # white: 185, 173, 162
+// # woodcolor: 191, 170, 144
 

@@ -90,7 +90,8 @@ int main(int argc, char** argv) {
         try {
             //The direction of the transform returned will be from the target_frame to the source_frame. 
             //Which if applied to data, will transform data in the source_frame into the target_frame. See tf/CoordinateFrameConventions#Transform_Direction
-            tf_listener.lookupTransform("torso", "kinect_pc_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
+            //tf_listener.lookupTransform("torso", "kinect_pc_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
+            tf_listener.lookupTransform("torso", "camera_rgb_optical_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
         } catch (tf::TransformException &exception) {
             ROS_ERROR("%s", exception.what());
             tferr = true;
@@ -116,6 +117,7 @@ int main(int argc, char** argv) {
 
     // extract top plane of the block and store it in pclGenPurposeCloud_ptr_ which is private
     merry_pcl_utils.extract_coplanar_pcl_operation(init_pt);
+    //merry_pcl_utils.extract_coplanar_pcl_operation(centroid); // test for dermining the radius
     // output it to DisplayCloud
     merry_pcl_utils.get_general_purpose_cloud(DisplayCloud);
     extracted_plane = merry_pcl_utils.getGenPurposeCloud();
@@ -131,20 +133,29 @@ int main(int argc, char** argv) {
 
 
     // match colored points in kinect colored cloud
-    double z_eps = 0.005; //+/- 5mm tolerance
-    double radius = 0.5; // try a 5cm radial search
+    double z_eps = 0.001; //+/- 5mm tolerance
+    double radius = 0.05; // try a 5cm radial search
     //operate on transformed kinect cloud:
     //extract indices of pts within +/- z_eps of height "plane_dist" from transformed 
     // kinect cloud AND within radius "radius" of "centroid";
     // get the indices of qualifying points
     ROS_INFO("getting indices of coplanar points within radius %f of patch centroid",radius);
-    merry_pcl_utils.filter_cloud_z(plane_dist, z_eps, radius, centroid, selected_indices);
+    merry_pcl_utils.filter_cloud_z(init_pt[2], z_eps, radius, centroid, selected_indices);
 
 
     // refer to the original colored Kinect pointcloud to get average color of points of interest
     ROS_INFO("computing average color of representative points...");
     avg_color = merry_pcl_utils.find_avg_color_selected_pts(selected_indices);
     Avg_Color = merry_pcl_utils.detect_color(avg_color);
+    int count = 0;
+    while(Avg_Color == 7 && count++ < 30) {
+    	z_eps = z_eps*1.1;
+    	radius = radius*0.9;
+    	merry_pcl_utils.filter_cloud_z(init_pt[2], z_eps, radius, centroid, selected_indices);
+	    ROS_INFO("computing average color of representative points...");
+	    avg_color = merry_pcl_utils.find_avg_color_selected_pts(selected_indices);
+	    Avg_Color = merry_pcl_utils.detect_color(avg_color);
+    }
     ROS_INFO("detect color as %d ", Avg_Color);
 
 
@@ -159,3 +170,4 @@ int main(int argc, char** argv) {
 	    ros::spinOnce();
 	}
 }
+

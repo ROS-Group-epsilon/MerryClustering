@@ -37,7 +37,7 @@ using namespace Eigen;
 using namespace pcl;
 using namespace pcl::io;
 
-enum COLORS { RED, GREEN, BLUE, BLACK, WHITE, WOODCOLOR, NONE };
+enum COLORS { RED, GREEN, BLUE, BLACK, WHITE, WOODCOLOR, CANCOLOR, NONE };
 
 class MerryPclutils {
 public:
@@ -125,6 +125,7 @@ private:
 	bool isBlack(int r, int g, int b, int tolerance);
 	bool isWhite(int r, int g, int b, int tolerance);
 	bool isWoodcolor(int r, int g, int b, int tolerance);
+	bool isCancolor(int r, int g, int b, int tolerance);
 
 	void transform_cloud(Eigen::Affine3f A, pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_ptr, pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud_ptr);
 	double distance_between(Eigen::Vector3f pt1, Eigen::Vector3f pt2);
