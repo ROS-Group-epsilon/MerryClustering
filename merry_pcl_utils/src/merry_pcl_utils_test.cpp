@@ -90,7 +90,8 @@ int main(int argc, char** argv) {
         try {
             //The direction of the transform returned will be from the target_frame to the source_frame. 
             //Which if applied to data, will transform data in the source_frame into the target_frame. See tf/CoordinateFrameConventions#Transform_Direction
-            tf_listener.lookupTransform("torso", "kinect_pc_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
+            //tf_listener.lookupTransform("torso", "kinect_pc_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
+            tf_listener.lookupTransform("torso", "camera_rgb_optical_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
         } catch (tf::TransformException &exception) {
             ROS_ERROR("%s", exception.what());
             tferr = true;
@@ -116,6 +117,7 @@ int main(int argc, char** argv) {
 
     // extract top plane of the block and store it in pclGenPurposeCloud_ptr_ which is private
     merry_pcl_utils.extract_coplanar_pcl_operation(init_pt);
+    //merry_pcl_utils.extract_coplanar_pcl_operation(centroid); // test for dermining the radius
     // output it to DisplayCloud
     merry_pcl_utils.get_general_purpose_cloud(DisplayCloud);
     extracted_plane = merry_pcl_utils.getGenPurposeCloud();

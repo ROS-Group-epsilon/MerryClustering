@@ -134,18 +134,20 @@ void MerryPclutils::transform_selected_points_cloud(Eigen::Affine3f A) {
 
 // code to determine the height of the top surface of the block
 Eigen::Vector3f MerryPclutils::get_top_point(pcl::PointCloud<pcl::PointXYZ>::Ptr inputCloud){
-	float top_height = -DBL_MAX;
+	float top_height = -0.6;//-DBL_MAX;
     //float max = -DBL_MAX, min = DBL_MAX;
 	int npts = inputCloud->points.size();//->width*inputCloud->height;
 	pcl::PointXYZ pt, top_point;
     //Eigen::Vector3f centroid = compute_centroid(inputCloud);
 	for(int i = 0; i < npts; i++){
         pt = inputCloud->points[i];
-		if(pt.z > top_height && pt.x > 0.5) {
-            //cout<<i<<endl;
-			top_height = pt.z;
-            top_point = pt;
-            //cout<<"top_height = "<< top_height <<endl;
+		if(pt.z > top_height) {
+            if(pt.z > -0.6 && pt.z < 0 && pt.x < 1.2 && pt.x > 0.4 && pt.y < 0.3 && pt.y > -0.3) { // limited radius
+                //cout<<i<<endl;
+    			top_height = pt.z;
+                top_point = pt;
+                //cout<<"top_height = "<< top_height <<endl;
+            }
 		}
 	}
 	ROS_INFO("Top height %f found.", top_height);
@@ -185,7 +187,9 @@ void MerryPclutils::extract_coplanar_pcl_operation(Eigen::Vector3f pt) {
     for (int i = 0; i < npts; ++i) {
         if( distance_between(pt, pclTransformed_ptr_->points[i].getVector3fMap()) < 0.5 //&& pclTransformed_ptr_->points[i].x > 0.5) {
                 && fabs(pt[2] - pclTransformed_ptr_->points[i].getVector3fMap()[2]) < 0.001 ) {
-
+        //if(pclTransformed_ptr_->points[i].x > 0.4 && pclTransformed_ptr_->points[i].x < 1.2) { // for determining the x radius
+        //if(pclTransformed_ptr_->points[i].y > -0.3 && pclTransformed_ptr_->points[i].y < 0.3) { // for determining the z radius
+        //if(pclTransformed_ptr_->points[i].z > -0.6 && pclTransformed_ptr_->points[i].z < 0) { // for determining the z radius
             //cout << "height of centroid = " << centroid[2] << endl;
             cout << "the height of point " << i << "= " << pclTransformed_ptr_->points[i].getVector3fMap()[2] << endl;
             pclGenPurposeCloud_ptr_->points.push_back(pclTransformed_ptr_->points[i]);

@@ -64,12 +64,18 @@ int main(int argc, char** argv) {
 	int rtn_val;
 	double plane_dist;
 
-	// send a command to plan a joint space move to predefined pose and then execute that plan
-	rtn_val = motionplanner.plan_move_to_pre_pose();
-	if(rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
-		rtn_val = motionplanner.rt_arm_execute_planned_path();
-	}
-
+    ros::Time begin = ros::Time::now();
+    ros::Time current;
+    while(current.toSec() - begin.toSec() < 0.5) {
+		// send a command to plan a joint space move to predefined pose and then execute that plan
+		rtn_val = motionplanner.plan_move_to_pre_pose();
+		if(rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
+			rtn_val = motionplanner.rt_arm_execute_planned_path();
+		}
+        ros::Duration(0.05).sleep();
+        ros::spinOnce();
+        current = ros::Time::now();
+    }
 	while(ros::ok()) {
 		// the following uses the MerryPclutils library in order to get the centroid, major axis, and plane normal
 		pcl::PointCloud<pcl::PointXYZ>::Ptr kinect_cloud = merry_pcl.getKinectCloud(); // TODO check if this line is needed
@@ -102,7 +108,9 @@ int main(int argc, char** argv) {
 				xvec_des[i] = major_axis[i];
 			}
 
-			origin_des[2] += 0.02; // raise up hand by 2cm
+			origin_des[0] += 0.07; // 
+			origin_des[1] -= 0.05; // 
+			origin_des[2] += 0.125; // raise up hand
 
 			yvec_des = zvec_des.cross(xvec_des); // construct consistent right-hand triad
 
@@ -120,6 +128,7 @@ int main(int argc, char** argv) {
 			rtn_val = motionplanner.rt_arm_plan_path_current_to_goal_pose(rt_tool_pose);
 			if(rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
 				rtn_val = motionplanner.rt_arm_execute_planned_path();
+				ros::Duration(0.5).sleep();
 			} else {
 				ROS_WARN("Cartesian path to desired pose is not achievable.");
 				return 0;
@@ -172,6 +181,7 @@ int main(int argc, char** argv) {
 			rtn_val = motionplanner.rt_arm_plan_jspace_path_current_to_qgoal(q_vec_pose);
 			if (rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
 				rtn_val = motionplanner.rt_arm_execute_planned_path();
+				ros::Duration(0.5).sleep();
 			} else {
 				ROS_WARN("Joint space path to desired pose is not achievable.");
 				return 0;
