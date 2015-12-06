@@ -207,9 +207,9 @@ void MerryPclutils::extract_coplanar_pcl_operation(Eigen::Vector3f pt) {
 //code to try and match found color to a specific color
 int MerryPclutils::detect_color(Eigen::Vector3d pt_color){
     // process the input color message
-    int r = pt_color(0);
-    int g = pt_color(1);
-    int b = pt_color(2);
+    int r = pt_color(0)<255 ? pt_color(0) : 255;
+    int g = pt_color(1)<255 ? pt_color(0) : 255;
+    int b = pt_color(2)<255 ? pt_color(0) : 255;
     // tolerance
     int tolerance = 10; // initially 100
 
@@ -343,11 +343,11 @@ Eigen::Vector3d MerryPclutils::find_avg_color_selected_pts(vector<int> &indices)
     int npts = indices.size();
     int index;
 
-    for (int i=0;i<npts;i++) {
+    for (int i = 0; i < npts; i++) {
         index = indices[i];
-        pt_color(0) = (double) pclKinect_clr_ptr_->points[index].r;
-        pt_color(1) = (double) pclKinect_clr_ptr_->points[index].g;
-        pt_color(2) = (double) pclKinect_clr_ptr_->points[index].b;
+        pt_color(0) = pclKinect_clr_ptr_->points[index].r < 255 ? (double) pclKinect_clr_ptr_->points[index].r : 255;
+        pt_color(1) = pclKinect_clr_ptr_->points[index].g < 255 ? (double) pclKinect_clr_ptr_->points[index].g : 255;
+        pt_color(2) = pclKinect_clr_ptr_->points[index].b < 255 ? (double) pclKinect_clr_ptr_->points[index].b : 255;
         avg_color += pt_color;
     }
     avg_color /= npts;

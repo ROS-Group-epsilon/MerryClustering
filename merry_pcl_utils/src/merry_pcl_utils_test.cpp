@@ -33,6 +33,42 @@ void check_height_of_each_point(MerryPclutils merry_pcl_utils, pcl::PointCloud<p
 }
 
 
+// match colored points in kinect colored cloud
+int determin_block_color(MerryPclutils merry_pcl_utils, double height, Eigen::Vector3f centroid) {
+    Eigen::Vector3d avg_rgb_color;
+    int block_color;
+
+    // give initial search radius
+    double z_eps = 0.001; //+/- 5mm tolerance
+    double radius = 0.05; // try a 5cm radial search
+    vector<int> selected_indices;
+
+    // operate on transformed kinect cloud:
+    // extract indices of pts within +/- z_eps of height "plane_dist" from transformed 
+    // kinect cloud AND within radius "radius" of "centroid";
+    // get the indices of qualifying points
+    //ROS_INFO("getting indices of coplanar points within radius %f of patch centroid",radius);
+    merry_pcl_utils.filter_cloud_z(height, z_eps, radius, centroid, selected_indices);
+
+    // refer to the original colored Kinect pointcloud to get average color of points of interest
+    ROS_INFO("computing average color of representative points...");
+    avg_rgb_color = merry_pcl_utils.find_avg_color_selected_pts(selected_indices);
+    block_color = merry_pcl_utils.detect_color(avg_rgb_color);
+    int count = 0;
+    while(block_color == 7 && count++ < 30) {
+        z_eps = z_eps*1.1;
+        radius = radius*0.9;
+        merry_pcl_utils.filter_cloud_z(init_pt[2], z_eps, radius, centroid, selected_indices);
+        ROS_INFO("computing average color of representative points...");
+        avg_rgb_color = merry_pcl_utils.find_avg_color_selected_pts(selected_indices);
+        block_color = merry_pcl_utils.detect_color(avg_rgb_color);
+    }
+    ROS_INFO("detect color as %d ", block_color);
+    return block_color;
+}
+
+
+
 int main(int argc, char** argv) {
     ros::init(argc, argv, "merry_pcl_utils_test"); //node name
     ros::NodeHandle nh;
@@ -60,9 +96,9 @@ int main(int argc, char** argv) {
     ros::Publisher pubCloud = nh.advertise<sensor_msgs::PointCloud2> ("/extracted_points", 1);
 
     // for color detect and match
-    vector<int> selected_indices;
-    Eigen::Vector3d avg_color;
-    int Avg_Color;
+
+    Eigen::Vector3d avg_rgb_color;
+    int block_color;
 
     // get kinect_cloud
     while (!merry_pcl_utils.got_kinect_cloud()) {
@@ -131,32 +167,9 @@ int main(int argc, char** argv) {
     double plane_dist = plane_normal.dot(centroid);
     ROS_INFO_STREAM(" normal: " << plane_normal.transpose() << "; dist = " << plane_dist);
 
-
+    
     // match colored points in kinect colored cloud
-    double z_eps = 0.001; //+/- 5mm tolerance
-    double radius = 0.05; // try a 5cm radial search
-    //operate on transformed kinect cloud:
-    //extract indices of pts within +/- z_eps of height "plane_dist" from transformed 
-    // kinect cloud AND within radius "radius" of "centroid";
-    // get the indices of qualifying points
-    ROS_INFO("getting indices of coplanar points within radius %f of patch centroid",radius);
-    merry_pcl_utils.filter_cloud_z(init_pt[2], z_eps, radius, centroid, selected_indices);
-
-
-    // refer to the original colored Kinect pointcloud to get average color of points of interest
-    ROS_INFO("computing average color of representative points...");
-    avg_color = merry_pcl_utils.find_avg_color_selected_pts(selected_indices);
-    Avg_Color = merry_pcl_utils.detect_color(avg_color);
-    int count = 0;
-    while(Avg_Color == 7 && count++ < 30) {
-    	z_eps = z_eps*1.1;
-    	radius = radius*0.9;
-    	merry_pcl_utils.filter_cloud_z(init_pt[2], z_eps, radius, centroid, selected_indices);
-	    ROS_INFO("computing average color of representative points...");
-	    avg_color = merry_pcl_utils.find_avg_color_selected_pts(selected_indices);
-	    Avg_Color = merry_pcl_utils.detect_color(avg_color);
-    }
-    ROS_INFO("detect color as %d ", Avg_Color);
+    determin_block_color(merry_pcl_utils, pt[2], centroid);
 
 
     // publish cloud

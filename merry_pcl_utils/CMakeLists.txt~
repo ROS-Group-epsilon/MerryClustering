@@ -26,6 +26,7 @@ cs_add_library(merry_pcl_utils src/merry_pcl_utils.cpp)
 # Executables
 cs_add_executable(merry_pcl_utils_main src/merry_pcl_utils_main.cpp)
 cs_add_executable(merry_pcl_utils_test src/merry_pcl_utils_test.cpp)
+cs_add_executable(test_frameid src/test_frameid.cpp)
 
 #target_link_libraries(process_pcl ${PCL_LIBRARIES})
 target_link_libraries(merry_pcl_utils_main merry_pcl_utils ${catkin_LIBRARIES})

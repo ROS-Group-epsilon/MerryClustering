@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>merry_calibration</name>
+  <name>merry_coordinator</name>
   <version>0.0.0</version>
-  <description>The merry_calibration package</description>
+  <description>The merry_coordinator package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
@@ -19,7 +19,7 @@
   <!-- Url tags are optional, but mutiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/merry_calibration</url> -->
+  <!-- <url type="website">http://wiki.ros.org/merry_coordinator</url> -->
 
 
   <!-- Author tags are optional, mutiple are allowed, one per tag -->
@@ -43,10 +43,36 @@
   <build_depend>roscpp</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>cwru_action</build_depend>
+  <build_depend>cwru_msgs</build_depend>
+  <build_depend>actionlib_msgs</build_depend>
+  <build_depend>actionlib</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>cmake_modules</build_depend>
+  <build_depend>pcl_ros</build_depend>
+  <build_depend>pcl_conversions</build_depend>
+  <build_depend>merry_gripper</build_depend>
+  <build_depend>merry_pcl_utils</build_depend>
+  <build_depend>merry_motionplanner</build_depend>
+  <build_depend>merry_hmi</build_depend>
+
   <run_depend>roscpp</run_depend>
   <run_depend>rospy</run_depend>
   <run_depend>std_msgs</run_depend>
-
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>cwru_action</run_depend>
+  <run_depend>cwru_msgs</run_depend>
+  <run_depend>actionlib_msgs</run_depend>
+  <run_depend>actionlib</run_depend>
+  <run_depend>tf</run_depend>
+  <run_depend>cmake_modules</run_depend>
+  <run_depend>pcl_ros</run_depend>
+  <run_depend>pcl_conversions</run_depend>
+  <run_depend>merry_gripper</run_depend>
+  <run_depend>merry_pcl_utils</run_depend>
+  <run_depend>merry_motionplanner</run_depend>
+  <run_depend>merry_hmi</run_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
