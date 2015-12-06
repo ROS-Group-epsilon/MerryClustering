@@ -42,4 +42,8 @@
 
 	11/28 Color_sorter 2nd edition
 
-		
+	12/3 Pcl done!
+
+	12/4 Motionplanner done!
+
+	12/5 Begin to test integrated modules, or coordinator in real robot
