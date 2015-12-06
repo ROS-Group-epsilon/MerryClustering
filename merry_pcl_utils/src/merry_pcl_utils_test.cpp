@@ -34,34 +34,40 @@ void check_height_of_each_point(MerryPclutils merry_pcl_utils, pcl::PointCloud<p
 
 
 // match colored points in kinect colored cloud
-int determin_block_color(MerryPclutils merry_pcl_utils, double height, Eigen::Vector3f centroid) {
-    Eigen::Vector3d avg_rgb_color;
+int determine_block_color(MerryPclutils merry_pcl_utils, double height, Eigen::Vector3f centroid) {
+    Eigen::Vector3d avg_rgb_color, normalized_avg_color;
     int block_color;
 
     // give initial search radius
-    double z_eps = 0.001; //+/- 5mm tolerance
-    double radius = 0.05; // try a 5cm radial search
+    double z_eps = 0.005; //+/- 5mm tolerance
+    double radius = 0.5; // try a 5cm radial search
+    double radius_large = 0.5; //0.25; //radius for inclusion of points on a plane for color matching
     vector<int> selected_indices;
 
-    // operate on transformed kinect cloud:
-    // extract indices of pts within +/- z_eps of height "plane_dist" from transformed 
-    // kinect cloud AND within radius "radius" of "centroid";
-    // get the indices of qualifying points
-    //ROS_INFO("getting indices of coplanar points within radius %f of patch centroid",radius);
     merry_pcl_utils.filter_cloud_z(height, z_eps, radius, centroid, selected_indices);
 
     // refer to the original colored Kinect pointcloud to get average color of points of interest
     ROS_INFO("computing average color of representative points...");
     avg_rgb_color = merry_pcl_utils.find_avg_color_selected_pts(selected_indices);
+    //normalize the color, to make it less sensitive to lighting
+    // better would be to use HSV
+    normalized_avg_color = avg_rgb_color/avg_rgb_color.norm();
+
+    //expand the candidate list of points to a larger radius
+    ROS_INFO("expanding search for coplanar points using radius= %f",radius_large);
+    merry_pcl_utils.filter_cloud_z(height, z_eps, radius_large,centroid,selected_indices);
+
     block_color = merry_pcl_utils.detect_color(avg_rgb_color);
     int count = 0;
-    while(block_color == 7 && count++ < 30) {
-        z_eps = z_eps*1.1;
-        radius = radius*0.9;
-        merry_pcl_utils.filter_cloud_z(init_pt[2], z_eps, radius, centroid, selected_indices);
+    while(block_color == 7 && count++ < 20) {
+        avg_rgb_color << 0,0,0;
+        z_eps = z_eps*1.05;
+        radius = radius*1.1;
+        merry_pcl_utils.filter_cloud_z(height, z_eps, radius, centroid, selected_indices);
         ROS_INFO("computing average color of representative points...");
         avg_rgb_color = merry_pcl_utils.find_avg_color_selected_pts(selected_indices);
         block_color = merry_pcl_utils.detect_color(avg_rgb_color);
+        ros::Duration(0.05).sleep();
     }
     ROS_INFO("detect color as %d ", block_color);
     return block_color;
@@ -73,7 +79,7 @@ int main(int argc, char** argv) {
     ros::init(argc, argv, "merry_pcl_utils_test"); //node name
     ros::NodeHandle nh;
 
-	
+    while(1) {	
     // initialize merry_pcl object
     ROS_INFO("CONSTRUCTING START");
     MerryPclutils merry_pcl_utils(&nh);
@@ -169,11 +175,11 @@ int main(int argc, char** argv) {
 
     
     // match colored points in kinect colored cloud
-    determin_block_color(merry_pcl_utils, pt[2], centroid);
+    determine_block_color(merry_pcl_utils, init_pt[2], centroid);
 
 
     // publish cloud
-	while(1) {
+
 	    pcl::toROSMsg(DisplayCloud, pcl2_DisplayCloud); //convert datatype to compatible ROS message type for publication
 	    pcl2_DisplayCloud.header.frame_id = "torso";
 	    pcl2_DisplayCloud.header.stamp = ros::Time::now(); //update the time stamp, so rviz does not complain        

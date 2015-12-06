@@ -6,6 +6,40 @@
 
 typedef Eigen::Matrix<double, 7, 1> Vectorq7x1;
 
+// match colored points in kinect colored cloud
+int determine_block_color(MerryPclutils merry_pcl_utils, double height, Eigen::Vector3f centroid) {
+    Eigen::Vector3d avg_rgb_color;
+    int block_color;
+
+    // give initial search radius
+    double z_eps = 0.001; //+/- 5mm tolerance
+    double radius = 0.05; // try a 5cm radial search
+    vector<int> selected_indices;
+
+    // operate on transformed kinect cloud:
+    // extract indices of pts within +/- z_eps of height "plane_dist" from transformed 
+    // kinect cloud AND within radius "radius" of "centroid";
+    // get the indices of qualifying points
+    //ROS_INFO("getting indices of coplanar points within radius %f of patch centroid",radius);
+    merry_pcl_utils.filter_cloud_z(height, z_eps, radius, centroid, selected_indices);
+
+    // refer to the original colored Kinect pointcloud to get average color of points of interest
+    ROS_INFO("computing average color of representative points...");
+    avg_rgb_color = merry_pcl_utils.find_avg_color_selected_pts(selected_indices);
+    block_color = merry_pcl_utils.detect_color(avg_rgb_color);
+    int count = 0;
+    while(block_color == 7 && count++ < 30) {
+        z_eps = z_eps*1.1;
+        radius = radius*0.9;
+        merry_pcl_utils.filter_cloud_z(height, z_eps, radius, centroid, selected_indices);
+        ROS_INFO("computing average color of representative points...");
+        avg_rgb_color = merry_pcl_utils.find_avg_color_selected_pts(selected_indices);
+        block_color = merry_pcl_utils.detect_color(avg_rgb_color);
+    }
+    ROS_INFO("detect color as %d ", block_color);
+    return block_color;
+}
+
 int main(int argc, char** argv) {
 	ROS_INFO("began running main method");
 	ros::init(argc, argv, "merry_motionplanner_action_client");
@@ -108,8 +142,8 @@ int main(int argc, char** argv) {
 				xvec_des[i] = major_axis[i];
 			}
 
-			origin_des[0] += 0.07; // 
-			origin_des[1] -= 0.05; // 
+			origin_des[0] += 0; // 
+			origin_des[1] -= 0; // 
 			origin_des[2] += 0.125; // raise up hand
 
 			yvec_des = zvec_des.cross(xvec_des); // construct consistent right-hand triad
@@ -145,12 +179,21 @@ int main(int argc, char** argv) {
 			plane_dist = plane_normal.dot(centroid);
 			double z_eps = 0.005;
 			double radius = 0.5;
-			merry_pcl.filter_cloud_z(plane_dist, z_eps, radius, centroid, selected_indices);
-			avg_color = merry_pcl.find_avg_color_selected_pts(selected_indices);
-			ROS_INFO_STREAM("r: " << avg_color[0] << " g: " << avg_color[1] << " b: " << avg_color[2] << "\n");
+			int color = 7;
+			int count = 0;
+    		while(color = 7 && count++ < 50) {
+	    		z_eps = z_eps;
+	        	radius = radius*1.1;
+				merry_pcl.filter_cloud_z(plane_dist, z_eps, radius, centroid, selected_indices);
+				avg_color = merry_pcl.find_avg_color_selected_pts(selected_indices);
+				ROS_INFO_STREAM("r: " << avg_color[0] << " g: " << avg_color[1] << " b: " << avg_color[2] << "\n");
+
+				// match colored points in kinect colored cloud
+	    		//int color = determine_block_color(merry_pcl_utils, init_pt[2], centroid);
 			
-			int color = merry_pcl.detect_color(avg_color);
-			std::cin>>color;
+    			color = merry_pcl.detect_color(avg_color);
+    		}			
+			//std::cin>>color;
 			// depending on color of block, will assign a different goal destination
 			if(color == 0 /*MerryPclutils::COLORS::RED*/) {
 				q_vec_pose << 0.8, -0.3, 0, 1, 0, 0.8, 0; //move to center

@@ -12,13 +12,13 @@ catkin_simple()
 # SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
 # Libraries
-#cs_add_library(merry_hmi src/merry_hmi.cpp)   
+cs_add_library(merry_hmi src/merry_hmi.cpp)   
 
 # Executables
-#cs_add_executable(merry_hmi_main src/merry_hmi_main.cpp)
+cs_add_executable(merry_hmi_main src/merry_hmi_main.cpp)
 
 # target_link_library(example my_lib)
-#target_link_libraries(merry_hmi_main merry_hmi ${catkin_LIBRARIES})
+target_link_libraries(merry_hmi_main merry_hmi ${catkin_LIBRARIES})
 
 cs_install()
 cs_export()

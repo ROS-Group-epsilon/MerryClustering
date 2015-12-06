@@ -24,7 +24,7 @@ cs_add_executable(merry_coordinator src/merry_coordinator.cpp)
 target_link_libraries(merry_coordinator merry_motionplanner ${catkin_LIBRARIES})
 target_link_libraries(merry_coordinator merry_gripper ${catkin_LIBRARIES})
 target_link_libraries(merry_coordinator merry_pcl_utils ${catkin_LIBRARIES})
-target_link_libraries(merry_coordinator merry_hmi ${catkin_LIBRARIES})
+# target_link_libraries(merry_coordinator merry_hmi ${catkin_LIBRARIES})
 
 
 cs_install()

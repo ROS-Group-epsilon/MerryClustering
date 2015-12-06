@@ -31,8 +31,6 @@
 #include <pcl_ros/transforms.h>
 #include <pcl-1.7/pcl/impl/point_types.hpp>
 
-#include <cwru_pcl_utils/cwru_pcl_utils.h>
-
 class merry_hmi{
 public:
 	merry_hmi(ros::NodeHandle* nodehandle);

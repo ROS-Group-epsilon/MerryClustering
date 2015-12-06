@@ -32,6 +32,6 @@ or
 
 7.	
 
-#	rosrun merry_coordinator merry_coordinator
+#	rosrun merry_motionplanner merry_motionplanner_main
 
 

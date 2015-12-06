@@ -1,7 +1,7 @@
 #include <merry_hmi/merry_hmi.h>
 
 merry_hmi::merry_hmi(ros::NodeHandle* nodehandle):nh_(*nodehandle){
-    cloudSub_ = nh_.subscribe("kinect/depth/points",1,updateKinectCB);
+    cloudSub_ = nh_.subscribe<sensor_msgs::PointCloud2> ("kinect/depth/points", 1, updateKinectCB, this);
 }
 
 void merry_hmi::updateKinectCB(const sensor_msgs::PointCloud2 & message_holder){
@@ -17,7 +17,7 @@ void merry_hmi::updateKinectCB(const sensor_msgs::PointCloud2 & message_holder){
 	int npts = sample.points.size();
 	for (int i = 0; i < npts; ++i) {
         if( sample.points[i].getVector3fMap()[2]>HEIGHTTHRESH){
-        	counter++
+        	counter++;
         	if (counter>COUNTTHRESH){
         		obstructed_= true;
         		break;

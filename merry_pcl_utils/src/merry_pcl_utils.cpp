@@ -1,4 +1,7 @@
 #include <merry_pcl_utils/merry_pcl_utils.h>
+#include <string>
+
+string STR_COLORS[7] = {"RED","GREEN","BLUE","BLACK","WHITE","WOODCOLOR","NONE"};
 
 MerryPclutils::MerryPclutils(ros::NodeHandle* nodehandle):
         nh_(*nodehandle),
@@ -166,11 +169,11 @@ bool MerryPclutils::isBlockExist() {
 
     for (int i = 0; i < npts; ++i) {
         if( distance_between(pt, pclTransformed_ptr_->points[i].getVector3fMap()) < 0.5 //&& pclTransformed_ptr_->points[i].x > 0.5) {
-                && fabs(pt[2] - pclTransformed_ptr_->points[i].getVector3fMap()[2]) < 0.01 ) {
+                && fabs(pt[2] - pclTransformed_ptr_->points[i].getVector3fMap()[2]) < 0.005 ) {
             count++;
         }
     }
-    if(count < pclTransformed_ptr_->points.size()*0.3) return true;
+    if(count < pclTransformed_ptr_->points.size()*0.1) return true;
     return false;
 }
 
@@ -186,7 +189,7 @@ void MerryPclutils::extract_coplanar_pcl_operation(Eigen::Vector3f pt) {
 
     for (int i = 0; i < npts; ++i) {
         if( distance_between(pt, pclTransformed_ptr_->points[i].getVector3fMap()) < 0.5 //&& pclTransformed_ptr_->points[i].x > 0.5) {
-                && fabs(pt[2] - pclTransformed_ptr_->points[i].getVector3fMap()[2]) < 0.01 ) {
+                && fabs(pt[2] - pclTransformed_ptr_->points[i].getVector3fMap()[2]) < 0.005 ) {
         //if(pclTransformed_ptr_->points[i].x > 0.4 && pclTransformed_ptr_->points[i].x < 1.2) { // for determining the x radius
         //if(pclTransformed_ptr_->points[i].y > -0.3 && pclTransformed_ptr_->points[i].y < 0.3) { // for determining the z radius
         //if(pclTransformed_ptr_->points[i].z > -0.6 && pclTransformed_ptr_->points[i].z < 0) { // for determining the z radius
@@ -205,24 +208,90 @@ void MerryPclutils::extract_coplanar_pcl_operation(Eigen::Vector3f pt) {
 
 
 //code to try and match found color to a specific color
-int MerryPclutils::detect_color(Eigen::Vector3d pt_color){
-    // process the input color message
-    int r = pt_color(0)<255 ? pt_color(0) : 255;
-    int g = pt_color(1)<255 ? pt_color(0) : 255;
-    int b = pt_color(2)<255 ? pt_color(0) : 255;
-    // tolerance
-    int tolerance = 10; // initially 100
+int MerryPclutils::detect_color(Eigen::Vector3d pt_color) {//, double color_match_thresh){
+    // # red: 157, 90, 96
+    // # green: 148, 165, 67  // 147.873303, 176.350679, 53.459276
+    // # blue: 114, 147, 177  //121.093023, 128.584718, 146.425249
+    // # black: 76, 70, 70  //58.028061, 53.408163, 52.683673
+    // # white: 185, 173, 162
+    // # woodcolor: 191, 170, 144
+    Eigen::Vector3d temp = pt_color;
 
-    if(isRed(r,g,b,tolerance)) return RED;
-    if(isGreen(r,g,b,tolerance)) return GREEN;
-    if(isBlue(r,g,b,tolerance)) return BLUE;
-    if(isBlack(r,g,b,tolerance)) return BLACK;
-    if(isWhite(r,g,b,tolerance)) return WHITE;
-    if(isWoodcolor(r,g,b,tolerance)) return WOODCOLOR;
-    if(isCancolor(r,g,b,tolerance)) return CANCOLOR;
+    Eigen::Vector3d normalized_red_color;
+    Eigen::Vector3d normalized_green_color;
+    Eigen::Vector3d normalized_blue_color;
+    Eigen::Vector3d normalized_black_color;
+    Eigen::Vector3d normalized_white_color;
+    Eigen::Vector3d normalized_woodcolor_color;
 
-    //ROS_INFO("color undefined");
-    return NONE;
+    normalized_red_color << 150, 90, 95;
+    normalized_green_color << 148, 165, 67;
+    normalized_blue_color << 112, 130, 152;
+    normalized_black_color << 50, 50, 50;
+    normalized_white_color << 180, 180, 180;
+    normalized_woodcolor_color << 185, 165, 134;
+
+    normalized_red_color = normalized_red_color/normalized_red_color.norm();
+    normalized_green_color = normalized_green_color/normalized_green_color.norm();
+    normalized_blue_color = normalized_blue_color/normalized_blue_color.norm();
+    normalized_black_color = normalized_black_color/normalized_black_color.norm();
+    normalized_white_color = normalized_white_color/normalized_white_color.norm();
+    normalized_woodcolor_color = normalized_woodcolor_color/normalized_woodcolor_color.norm();
+
+    double color_match_thresh = 0.1;
+    pt_color = pt_color/pt_color.norm(); //compute normalized color
+    double diff = (normalized_red_color-pt_color).norm();
+    int final_color = RED;
+
+    if (diff > (normalized_green_color-pt_color).norm()) {
+        diff = (normalized_green_color-pt_color).norm();
+        final_color = GREEN;
+    } else if (diff > (normalized_blue_color-pt_color).norm()) {
+        diff = (normalized_blue_color-pt_color).norm();
+        final_color = BLUE;
+    } else if (diff > (normalized_black_color-pt_color).norm() && temp[0] < 90 && temp[1] < 90 && temp[2] < 90) {
+        diff = (normalized_black_color-pt_color).norm();
+        final_color = BLACK;
+    } else if (diff > (normalized_white_color-pt_color).norm() && temp[0] > 150 && temp[1] > 150 && temp[2] > 150) {
+        diff = (normalized_white_color-pt_color).norm();
+        final_color = WHITE;
+    } else if (diff > (normalized_woodcolor_color-pt_color).norm()) {
+        diff = (normalized_woodcolor_color-pt_color).norm();
+        final_color = WOODCOLOR;
+    }
+
+    if ((normalized_black_color-pt_color).norm() < color_match_thresh && temp[0] < 90 && temp[1] < 90 && temp[2] < 90) {
+        ROS_INFO("BLACK");
+        return BLACK;
+    } else if ((normalized_white_color-pt_color).norm() < color_match_thresh && temp[0] > 150 && temp[1] > 150 && temp[2] > 150) {
+        ROS_INFO("WHITE");
+        return WHITE;
+    }
+
+    // if ((normalized_red_color-pt_color).norm() < color_match_thresh) {
+    //     ROS_INFO("RED");
+    //     return RED;
+    // } else if ((normalized_green_color-pt_color).norm() < color_match_thresh) {
+    //     ROS_INFO("GREEN");
+    //     return GREEN;
+    // } else if ((normalized_blue_color-pt_color).norm() < color_match_thresh) {
+    //     ROS_INFO("BLUE");
+    //     return BLUE;
+    // } else if ((normalized_black_color-pt_color).norm() < color_match_thresh && pt_color_amplitue < 100) {
+    //     ROS_INFO("BLACK");
+    //     return BLACK;
+    // } else if ((normalized_white_color-pt_color).norm() < color_match_thresh && pt_color_amplitue > 150) {
+    //     ROS_INFO("WHITE");
+    //     return WHITE;
+    // } else if ((normalized_woodcolor_color-pt_color).norm() < color_match_thresh) {
+    //     ROS_INFO("WOODCOLOR");
+    //     return WOODCOLOR;
+    // } else {
+    //     ROS_INFO("NONE");
+    //     return NONE;       
+    // }
+    cout << "===========" <<STR_COLORS[final_color] << "===========" << endl;
+    return final_color;
 }
 
 
@@ -328,7 +397,7 @@ Eigen::Vector3d MerryPclutils::find_avg_color(pcl::PointCloud<pcl::PointXYZRGB>:
     }
     }
     ROS_INFO("found %d points with interesting color",npts2_colored);
-    avg_color/=npts2_colored;
+    avg_color /= npts2_colored;
     ROS_INFO("avg interesting color = %f, %f, %f",avg_color(0),avg_color(1),avg_color(2));
     return avg_color;
 }
@@ -348,6 +417,9 @@ Eigen::Vector3d MerryPclutils::find_avg_color_selected_pts(vector<int> &indices)
         pt_color(0) = pclKinect_clr_ptr_->points[index].r < 255 ? (double) pclKinect_clr_ptr_->points[index].r : 255;
         pt_color(1) = pclKinect_clr_ptr_->points[index].g < 255 ? (double) pclKinect_clr_ptr_->points[index].g : 255;
         pt_color(2) = pclKinect_clr_ptr_->points[index].b < 255 ? (double) pclKinect_clr_ptr_->points[index].b : 255;
+        pt_color(0) = pclKinect_clr_ptr_->points[index].r > 0 ? (double) pclKinect_clr_ptr_->points[index].r : 0;
+        pt_color(1) = pclKinect_clr_ptr_->points[index].g > 0 ? (double) pclKinect_clr_ptr_->points[index].g : 0;
+        pt_color(2) = pclKinect_clr_ptr_->points[index].b > 0 ? (double) pclKinect_clr_ptr_->points[index].b : 0;
         avg_color += pt_color;
     }
     avg_color /= npts;
@@ -459,8 +531,8 @@ void MerryPclutils::compute_plane_normal_and_major_axis(pcl::PointCloud<pcl::Poi
 bool MerryPclutils::isRed(int r, int g, int b, int tolerance) {
     // # red: 157, 90, 96
     int standard_r = 175;
-    int standard_g = 62;
-    int standard_b = 88;
+    int standard_g = 20;
+    int standard_b = 65;
 
     if(abs(standard_r - r) < tolerance && abs(standard_g - g) < tolerance && abs(standard_b - b) < tolerance) {
         ROS_INFO("RED");
@@ -487,7 +559,7 @@ bool MerryPclutils::isBlue(int r, int g, int b, int tolerance) {
     // # blue: 114, 147, 177
     int standard_r = 120;
     int standard_g = 150;
-    int standard_b = 180;
+    int standard_b = 190;
 
     if(abs(standard_r - r) < tolerance && abs(standard_g - g) < tolerance && abs(standard_b - b) < tolerance) {
         ROS_INFO("BLUE");

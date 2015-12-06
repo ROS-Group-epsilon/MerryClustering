@@ -1,6 +1,6 @@
 #include <merry_gripper/merry_gripper.h>
-#include <merry_pcl_utils_utils/merry_pcl_utils_utils.h>
-#include <merry_hmi/merry_hmi.h>
+#include <merry_pcl_utils/merry_pcl_utils.h>
+//#include <merry_hmi/merry_hmi.h>
 #include <merry_motionplanner/merry_motionplanner.h>
 
 
@@ -39,7 +39,7 @@ void check_height_of_each_point(MerryPclutils merry_pcl_utils, pcl::PointCloud<p
 
 
 // match colored points in kinect colored cloud
-int determin_block_color(MerryPclutils merry_pcl_utils, double height, Eigen::Vector3f centroid) {
+int determine_block_color(MerryPclutils merry_pcl_utils, double height, Eigen::Vector3f centroid) {
     Eigen::Vector3d avg_rgb_color;
     int block_color;
 
@@ -62,8 +62,8 @@ int determin_block_color(MerryPclutils merry_pcl_utils, double height, Eigen::Ve
     int count = 0;
     while(block_color == 7 && count++ < 30) {
         z_eps = z_eps*1.1;
-        radius = radius*0.9;
-        merry_pcl_utils.filter_cloud_z(init_pt[2], z_eps, radius, centroid, selected_indices);
+        radius = radius*1.2;
+        merry_pcl_utils.filter_cloud_z(height, z_eps, radius, centroid, selected_indices);
         ROS_INFO("computing average color of representative points...");
         avg_rgb_color = merry_pcl_utils.find_avg_color_selected_pts(selected_indices);
         block_color = merry_pcl_utils.detect_color(avg_rgb_color);
@@ -81,8 +81,8 @@ int main(int argc, char** argv) {
 
 
 	ROS_INFO("created node and nodehandle");
-	MerryGripper gripper(&nh);
-	MerryMotionplanner motionplanner(&nh);
+	MerryGripper merry_gripper(&nh);
+	MerryMotionplanner merry_motionplanner(&nh);
 	MerryPclutils merry_pcl_utils(&nh);
 	//merry_hmi merry_hmi(&nh);
 	ROS_INFO("created instances of each library");
@@ -156,7 +156,6 @@ int main(int argc, char** argv) {
 	geometry_msgs::PoseStamped rt_tool_pose;
 	A_sensor_wrt_torso = merry_pcl_utils.transformTFToEigen(tf_sensor_frame_to_torso_frame);
 	
-	Eigen::Vector3f plane_normal, major_axis, centroid;
 	Eigen::Vector3f allzeroVector(0, 0, 0);
 	Eigen::Matrix3d Rmat;
 	int rtn_val;
@@ -168,9 +167,9 @@ int main(int argc, char** argv) {
     ros::Time current;
     while(current.toSec() - begin.toSec() < 0.5) {
 		// send a command to plan a joint space move to predefined pose and then execute that plan
-		rtn_val = motionplanner.plan_move_to_pre_pose();
+		rtn_val = merry_motionplanner.plan_move_to_pre_pose();
 		if(rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
-			rtn_val = motionplanner.rt_arm_execute_planned_path();
+			rtn_val = merry_motionplanner.rt_arm_execute_planned_path();
 		}
         ros::Duration(0.05).sleep();
         ros::spinOnce();
@@ -180,7 +179,7 @@ int main(int argc, char** argv) {
 
 	while(ros::ok()) {
 		// regain a new kinect cloud
-		merry_pcl_utils.merry_pcl_utils(&nh);
+		//MerryPclutils merry_pcl_utils(&nh);
 
 		ROS_INFO("attempting to get kinect cloud");
 		while(!merry_pcl_utils.got_kinect_cloud()) {
@@ -197,13 +196,13 @@ int main(int argc, char** argv) {
 		merry_pcl_utils.transform_kinect_cloud(A_sensor_wrt_torso);
 		transformed_kinect_cloud = merry_pcl_utils.getTransformedKinectCloud();
 		init_pt = merry_pcl_utils.get_top_point(transformed_kinect_cloud);
-
+		ros::Duration(1.0).sleep();
 
 		if(merry_pcl_utils.isBlockExist() /* && !merry_hmi.isObstructed() */) {
 			ROS_INFO("block has been found");
 
 			merry_pcl_utils.extract_coplanar_pcl_operation(init_pt);
-			merry_pcl_utils.get_general_purpose_cloud(display_cloud);
+			merry_pcl_utils.get_general_purpose_cloud(DisplayCloud);
 			extracted_plane = merry_pcl_utils.getGenPurposeCloud();
 
 			// detemine what the centroid, major axis, and plane normal are
@@ -211,7 +210,14 @@ int main(int argc, char** argv) {
 			major_axis = merry_pcl_utils.get_major_axis(extracted_plane);
 			plane_normal = merry_pcl_utils.get_plane_normal(extracted_plane);
 			ROS_INFO("Found the centroid, major axis, and plane normal!");
-			if(plane_normal == allzeroVector) break;
+			//if(plane_normal == allzeroVector) continue;
+
+
+			pcl::toROSMsg(DisplayCloud, pcl2_DisplayCloud); //convert datatype to compatible ROS message type for publication
+		    pcl2_DisplayCloud.header.frame_id = "torso";
+		    pcl2_DisplayCloud.header.stamp = ros::Time::now(); //update the time stamp, so rviz does not complain        
+		    pubCloud.publish(pcl2_DisplayCloud);
+		    ros::Duration(0.5).sleep(); // sleep for half a second
 
             //input: centroid, plane_normal, major_axis
             //output: Rmat, origin_des
@@ -221,20 +227,20 @@ int main(int argc, char** argv) {
             //construct a goal affine pose:
             Affine_des_gripper = merry_motionplanner.construct_affine_pose(Rmat, origin_des);
 
-			rt_tool_pose.pose = motionplanner.transformEigenAffine3dToPose(Affine_des_gripper);
+			rt_tool_pose.pose = merry_motionplanner.transformEigenAffine3dToPose(Affine_des_gripper);
 
 			// plan path to goal destination and execute path if plan is successful
-			rtn_val = motionplanner.rt_arm_plan_path_current_to_goal_pose(rt_tool_pose);
+			rtn_val = merry_motionplanner.rt_arm_plan_path_current_to_goal_pose(rt_tool_pose);
 			if(rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
-				rtn_val = motionplanner.rt_arm_execute_planned_path();
+				rtn_val = merry_motionplanner.rt_arm_execute_planned_path();
 				ros::Duration(0.5).sleep();
 			} else {
 				ROS_WARN("Cartesian path to desired pose is not achievable.");
 				ros::Duration(1).sleep();
-				break;
+				continue;
 			}
 
-			gripper.grasp();
+			merry_gripper.grasp();
 
 			// the following uses the MerryPclutils library in order to determine what color the block is
 			//Eigen::VectorXd q_vec_pose;
@@ -249,7 +255,9 @@ int main(int argc, char** argv) {
 			avg_color = merry_pcl_utils.find_avg_color_selected_pts(selected_indices);
 			ROS_INFO_STREAM("r: " << avg_color[0] << " g: " << avg_color[1] << " b: " << avg_color[2] << "\n");
 			
-			int color = merry_pcl_utils.detect_color(avg_color);
+			// match colored points in kinect colored cloud
+    		int color = determine_block_color(merry_pcl_utils, init_pt[2], centroid);
+			//int color = merry_pcl_utils.detect_color(avg_color);
 			//std::cin>>color;
 			// depending on color of block, will assign a different goal destination
 			if(color == 0 /*MerryPclutils::COLORS::RED*/) {
@@ -273,35 +281,35 @@ int main(int argc, char** argv) {
 				q_vec_pose <<  1.2, -0.2, 0, 0.8, 0, 0.8, 0;
 			} else {
 				ROS_WARN("Color of block could not be determined.");
-				ros::Duration(0.5).sleep();
-				break;
+				//ros::Duration(0.5).sleep();
+				continue;
 			}
 			
 			// plan path to goal destination that was determined above
 			// execute motion if path was determined to be successful
-			rtn_val = motionplanner.rt_arm_plan_jspace_path_current_to_qgoal(q_vec_pose);
+			rtn_val = merry_motionplanner.rt_arm_plan_jspace_path_current_to_qgoal(q_vec_pose);
 			if (rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
-				rtn_val = motionplanner.rt_arm_execute_planned_path();
+				rtn_val = merry_motionplanner.rt_arm_execute_planned_path();
 				ros::Duration(0.5).sleep();
 			} else {
 				ROS_WARN("Joint space path to desired pose is not achievable.");
-				ros::Duration(1).sleep();
-				break;
+				ros::Duration(0.5).sleep();
+				continue;
 			}
 
-			gripper.release();
+			merry_gripper.release();
 
 			// go back to pre pose
-			rtn_val = motionplanner.plan_move_to_pre_pose();
+			rtn_val = merry_motionplanner.plan_move_to_pre_pose();
 			if(rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
-				rtn_val = motionplanner.rt_arm_execute_planned_path();
+				rtn_val = merry_motionplanner.rt_arm_execute_planned_path();
 				ros::Duration(0.5).sleep();
 			} else {
 				ROS_WARN("Move to pre pose is not achievable.");
-				break;
+				continue;
 			}
 		} else {
-			ROS_WARN("Don't kidding me. There is no block on the table!");
+			ROS_INFO("+++++++++++++++Don't kidding me. There is no block on the table!+++++++++++++++++++");
 		}
 
 		ros::Duration(0.5).sleep();
