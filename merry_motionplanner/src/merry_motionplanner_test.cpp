@@ -10,7 +10,7 @@ int main(int argc, char** argv) {
     CwruPclUtils cwru_pcl_utils(&nh);
 
 
-    while (!cwru_pcl_utils.got_kinect_cloud()) {
+    while (!merry_motionplanner.got_kinect_cloud()) {
         ROS_INFO("did not receive pointcloud");
         ros::spinOnce();
         ros::Duration(1.0).sleep();
@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
     Eigen::Vector3d origin_des;
     geometry_msgs::PoseStamped rt_tool_pose;
     
-    A_sensor_wrt_torso = cwru_pcl_utils.transformTFToEigen(tf_sensor_frame_to_torso_frame);
+    A_sensor_wrt_torso = merry_motionplanner.transformTFToEigen(tf_sensor_frame_to_torso_frame);
     Eigen::Vector3f plane_normal, major_axis, centroid;
     Eigen::Matrix3d Rmat;
     int rtn_val;    
