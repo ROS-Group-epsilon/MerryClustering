@@ -43,6 +43,9 @@ class MerryPclutils {
 public:
 	MerryPclutils(ros::NodeHandle* nodehandle);
 
+	void initializeSubscribers(); // we will define some helper methods to encapsulate the gory details of initializing subscribers, publishers and services
+    void initializePublishers();
+
 	pcl::PointCloud<pcl::PointXYZ>::Ptr getKinectCloud() { return pclKinect_ptr_; };
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr getKinectColorCloud() { return pclKinect_clr_ptr_; };
 	pcl::PointCloud<pcl::PointXYZ>::Ptr getTransformedKinectCloud() { return pclTransformed_ptr_; };
@@ -109,9 +112,6 @@ private:
 	Eigen::Vector3f plane_normal_, major_axis_, centroid_;
 
 	// member functions
-    void initializeSubscribers(); // we will define some helper methods to encapsulate the gory details of initializing subscribers, publishers and services
-    void initializePublishers();
-
     void kinectCB(const sensor_msgs::PointCloud2ConstPtr& cloud);
 	void extractCB(const sensor_msgs::PointCloud2ConstPtr& cloud);
 

@@ -320,9 +320,13 @@ Eigen::Matrix3d MerryMotionplanner::compute_orientation(Eigen::Vector3f plane_no
 
 Eigen::Vector3d MerryMotionplanner::compute_origin_des(Eigen::Vector3f centroid) {
     Eigen::Vector3d origin_des;
+    for(int i = 0; i < 3; i++) {
+        origin_des[i] = centroid[i];
+    }
     origin_des[0] += 0; // 
     origin_des[1] -= 0; // 
     origin_des[2] += 0.125; // raise up hand
+    return origin_des;
 }
 
 

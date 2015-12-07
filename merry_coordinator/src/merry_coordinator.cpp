@@ -44,8 +44,8 @@ int determine_block_color(MerryPclutils merry_pcl_utils, double height, Eigen::V
     int block_color;
 
     // give initial search radius
-    double z_eps = 0.001; //+/- 5mm tolerance
-    double radius = 0.05; // try a 5cm radial search
+    double z_eps = 0.005; //+/- 5mm tolerance
+    double radius = 0.5; // try a 5cm radial search
     vector<int> selected_indices;
 
     // operate on transformed kinect cloud:
@@ -59,15 +59,7 @@ int determine_block_color(MerryPclutils merry_pcl_utils, double height, Eigen::V
     ROS_INFO("computing average color of representative points...");
     avg_rgb_color = merry_pcl_utils.find_avg_color_selected_pts(selected_indices);
     block_color = merry_pcl_utils.detect_color(avg_rgb_color);
-    int count = 0;
-    while(block_color == 7 && count++ < 30) {
-        z_eps = z_eps*1.1;
-        radius = radius*1.2;
-        merry_pcl_utils.filter_cloud_z(height, z_eps, radius, centroid, selected_indices);
-        ROS_INFO("computing average color of representative points...");
-        avg_rgb_color = merry_pcl_utils.find_avg_color_selected_pts(selected_indices);
-        block_color = merry_pcl_utils.detect_color(avg_rgb_color);
-    }
+
     ROS_INFO("detect color as %d ", block_color);
     return block_color;
 }
@@ -137,8 +129,8 @@ int main(int argc, char** argv) {
 	while(tferr) {
 		tferr = false;
 		try {
-			//tf_listener.lookupTransform("torso", "kinect_pc_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
-			tf_listener.lookupTransform("torso", "camera_rgb_optical_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
+			tf_listener.lookupTransform("torso", "kinect_pc_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
+			//tf_listener.lookupTransform("torso", "camera_rgb_optical_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
 		} catch(tf::TransformException &exception) {
 			ROS_ERROR("%s", exception.what());
 			tferr = true;
@@ -179,7 +171,7 @@ int main(int argc, char** argv) {
 
 	while(ros::ok()) {
 		// regain a new kinect cloud
-		//MerryPclutils merry_pcl_utils(&nh);
+		merry_pcl_utils.initializeSubscribers();
 
 		ROS_INFO("attempting to get kinect cloud");
 		while(!merry_pcl_utils.got_kinect_cloud()) {
@@ -210,7 +202,7 @@ int main(int argc, char** argv) {
 			major_axis = merry_pcl_utils.get_major_axis(extracted_plane);
 			plane_normal = merry_pcl_utils.get_plane_normal(extracted_plane);
 			ROS_INFO("Found the centroid, major axis, and plane normal!");
-			//if(plane_normal == allzeroVector) continue;
+			if(plane_normal == allzeroVector) continue;
 
 
 			pcl::toROSMsg(DisplayCloud, pcl2_DisplayCloud); //convert datatype to compatible ROS message type for publication
@@ -236,7 +228,7 @@ int main(int argc, char** argv) {
 				ros::Duration(0.5).sleep();
 			} else {
 				ROS_WARN("Cartesian path to desired pose is not achievable.");
-				ros::Duration(1).sleep();
+				//ros::Duration(1).sleep();
 				continue;
 			}
 
@@ -248,12 +240,7 @@ int main(int argc, char** argv) {
 			vector<int> selected_indices;
 			Eigen::Vector3d avg_color;
 
-			plane_dist = plane_normal.dot(centroid);
-			double z_eps = 0.005;
-			double radius = 0.5;
-			merry_pcl_utils.filter_cloud_z(plane_dist, z_eps, radius, centroid, selected_indices);
-			avg_color = merry_pcl_utils.find_avg_color_selected_pts(selected_indices);
-			ROS_INFO_STREAM("r: " << avg_color[0] << " g: " << avg_color[1] << " b: " << avg_color[2] << "\n");
+			//plane_dist = plane_normal.dot(centroid);
 			
 			// match colored points in kinect colored cloud
     		int color = determine_block_color(merry_pcl_utils, init_pt[2], centroid);
@@ -293,7 +280,7 @@ int main(int argc, char** argv) {
 				ros::Duration(0.5).sleep();
 			} else {
 				ROS_WARN("Joint space path to desired pose is not achievable.");
-				ros::Duration(0.5).sleep();
+				//ros::Duration(100).sleep();
 				continue;
 			}
 

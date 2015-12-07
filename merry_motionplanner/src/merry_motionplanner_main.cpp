@@ -12,8 +12,8 @@ int determine_block_color(MerryPclutils merry_pcl_utils, double height, Eigen::V
     int block_color;
 
     // give initial search radius
-    double z_eps = 0.001; //+/- 5mm tolerance
-    double radius = 0.05; // try a 5cm radial search
+    double z_eps = 0.005; //+/- 5mm tolerance
+    double radius = 0.5; // try a 5cm radial search
     vector<int> selected_indices;
 
     // operate on transformed kinect cloud:
@@ -27,15 +27,7 @@ int determine_block_color(MerryPclutils merry_pcl_utils, double height, Eigen::V
     ROS_INFO("computing average color of representative points...");
     avg_rgb_color = merry_pcl_utils.find_avg_color_selected_pts(selected_indices);
     block_color = merry_pcl_utils.detect_color(avg_rgb_color);
-    int count = 0;
-    while(block_color == 7 && count++ < 30) {
-        z_eps = z_eps*1.1;
-        radius = radius*0.9;
-        merry_pcl_utils.filter_cloud_z(height, z_eps, radius, centroid, selected_indices);
-        ROS_INFO("computing average color of representative points...");
-        avg_rgb_color = merry_pcl_utils.find_avg_color_selected_pts(selected_indices);
-        block_color = merry_pcl_utils.detect_color(avg_rgb_color);
-    }
+
     ROS_INFO("detect color as %d ", block_color);
     return block_color;
 }
@@ -70,12 +62,12 @@ int main(int argc, char** argv) {
 	// start a transform listener and warm it up
 	tf::TransformListener tf_listener;
 	bool tferr = true;
-	ROS_INFO("waiting for tf between kinect_pc_frame and torso...");
+	ROS_INFO("waiting for tf between kinect_pc_frame/camera_rgb_optical_frame and torso...");
 	while(tferr) {
 		tferr = false;
 		try {
-			//tf_listener.lookupTransform("torso", "kinect_pc_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
-			tf_listener.lookupTransform("torso", "camera_rgb_optical_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
+			tf_listener.lookupTransform("torso", "kinect_pc_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
+			//tf_listener.lookupTransform("torso", "camera_rgb_optical_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
 		} catch(tf::TransformException &exception) {
 			ROS_ERROR("%s", exception.what());
 			tferr = true;
