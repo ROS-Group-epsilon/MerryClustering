@@ -100,58 +100,58 @@ int main(int argc, char** argv) {
         cin>>i;
         switch(i) {
             case 1:
-                while(1) {
-                    my_interesting_moves.set_goal_salute(des_trajectory);
-                    sendCommand(des_trajectory);
-                    ros::Duration(0.05).sleep();
-                }
+                // while(1) {
+                //     my_interesting_moves.set_goal_salute(des_trajectory);
+                //     sendCommand(des_trajectory);
+                //     ros::Duration(0.05).sleep();
+                // }
                 my_interesting_moves.move_to_center(des_trajectory);
                 sendCommand(des_trajectory);
                 // gripper do something
                 ros::Duration(0.5).sleep();
-                my_interesting_moves.move_to_origin(des_trajectory);
-                sendCommand(des_trajectory);
-                ros::Duration(0.5).sleep();
+                // my_interesting_moves.move_to_origin(des_trajectory);
+                // sendCommand(des_trajectory);
+                // ros::Duration(0.5).sleep();
                 break;
             case 2:
                 my_interesting_moves.move_to_left(des_trajectory);
                 sendCommand(des_trajectory);
                 // gripper do something
                 ros::Duration(0.5).sleep();
-                my_interesting_moves.move_to_origin(des_trajectory);
-                sendCommand(des_trajectory);
+                // my_interesting_moves.move_to_origin(des_trajectory);
+                // sendCommand(des_trajectory);
                 break;
             case 3:
                 my_interesting_moves.move_to_right(des_trajectory);
                 sendCommand(des_trajectory);
                 // gripper do something
                 ros::Duration(0.5).sleep();
-                my_interesting_moves.move_to_origin(des_trajectory);
-                sendCommand(des_trajectory);
+                // my_interesting_moves.move_to_origin(des_trajectory);
+                // sendCommand(des_trajectory);
                 break;
             case 4:
-                my_interesting_moves.move_to_centerbehind(des_trajectory);
+                my_interesting_moves.move_to_centerfront(des_trajectory);
                 sendCommand(des_trajectory);
                 // gripper do something
                 ros::Duration(0.5).sleep();
-                my_interesting_moves.move_to_origin(des_trajectory);
-                sendCommand(des_trajectory);
+                // my_interesting_moves.move_to_origin(des_trajectory);
+                // sendCommand(des_trajectory);
                 break;
             case 5:
                 my_interesting_moves.move_to_leftbehind(des_trajectory);
                 sendCommand(des_trajectory);
                 // gripper do something
                 ros::Duration(0.5).sleep();
-                my_interesting_moves.move_to_origin(des_trajectory);
-                sendCommand(des_trajectory);
+                // my_interesting_moves.move_to_origin(des_trajectory);
+                // sendCommand(des_trajectory);
                 break;
             case 6:
                 my_interesting_moves.move_to_rightbehind(des_trajectory);
                 sendCommand(des_trajectory);
                 // gripper do something
-                ros::Duration(0.5).sleep();
-                my_interesting_moves.move_to_origin(des_trajectory);
-                sendCommand(des_trajectory);
+                ros::Duration(1).sleep();
+                // my_interesting_moves.move_to_origin(des_trajectory);
+                // sendCommand(des_trajectory);
                 break;
             case 0:
                 return 0; 

@@ -429,10 +429,11 @@ void My_interesting_moves::move_to_center(trajectory_msgs::JointTrajectory &des_
     q_in_vecxd = q_vec_right_arm; // start from here;
     des_path.push_back(q_in_vecxd); //put all zeros here
 
-    q_pre_pose<< 0.8, -0.8, 0, 1, 0, 0.8, 0;
-    q_in_vecxd = q_pre_pose;  // conversion;
-    des_path.push_back(q_in_vecxd);  //twice, to define a trajectory
-    q_pre_pose<< 0.8, -0.3, 0, 1, 0, 0.8, 0;
+    // q_pre_pose<< 0.8, -0.8, 0, 1, 0, 0.8, 0;
+    // q_in_vecxd = q_pre_pose;  // conversion;
+    // des_path.push_back(q_in_vecxd);  //twice, to define a trajectory
+    //q_pre_pose<< 0.8, -0.3, 0, 1, 0, 0.8, 0;
+    q_pre_pose<< 1.1, -0.5, 0, 0.7, 0, 1.3, 0;
     q_in_vecxd = q_pre_pose;  // conversion;
     des_path.push_back(q_in_vecxd);  // twice, to define a trajectory
 
@@ -459,10 +460,11 @@ void My_interesting_moves::move_to_left(trajectory_msgs::JointTrajectory &des_tr
     q_in_vecxd = q_vec_right_arm; // start from here;
     des_path.push_back(q_in_vecxd); //put all zeros here
 
-    q_pre_pose<< 0.8, -0.8, 0, 1, 0, 0.8, 0;
-    q_in_vecxd = q_pre_pose;  // conversion;
-    des_path.push_back(q_in_vecxd);  //twice, to define a trajectory
-    q_pre_pose<< 1.2, -0.2, 0, 0.8, 0, 0.8, 0;
+    // q_pre_pose<< 0.8, -0.8, 0, 1, 0, 0.8, 0;
+    // q_in_vecxd = q_pre_pose;  // conversion;
+    // des_path.push_back(q_in_vecxd);  //twice, to define a trajectory
+    // q_pre_pose<< 1.2, -0.2, 0, 0.8, 0, 0.8, 0;
+    q_pre_pose<< 1.4, -0.5, 0, 0.8, 0.2, 1, 0;
     q_in_vecxd = q_pre_pose;  // conversion;
     des_path.push_back(q_in_vecxd);  // twice, to define a trajectory
 
@@ -489,10 +491,11 @@ void My_interesting_moves::move_to_right(trajectory_msgs::JointTrajectory &des_t
     q_in_vecxd = q_vec_right_arm; // start from here;
     des_path.push_back(q_in_vecxd); //put all zeros here
 
-    q_pre_pose<< 0.8, -0.8, 0, 1, 0, 0.8, 0;
-    q_in_vecxd = q_pre_pose;  // conversion;
-    des_path.push_back(q_in_vecxd);  //twice, to define a trajectory
-    q_pre_pose<< 0.4, -0.2, 0, 0.8, 0, 0.8, 0;
+    // q_pre_pose<< 0.8, -0.8, 0, 1, 0, 0.8, 0;
+    // q_in_vecxd = q_pre_pose;  // conversion;
+    // des_path.push_back(q_in_vecxd);  //twice, to define a trajectory
+    // q_pre_pose<< 0.4, -0.2, 0, 0.8, 0, 0.8, 0;
+    q_pre_pose<< 0.8, -0.5, 0, 0.8, 0, 1.2, 0;
     q_in_vecxd = q_pre_pose;  // conversion;
     des_path.push_back(q_in_vecxd);  // twice, to define a trajectory
 
@@ -501,7 +504,7 @@ void My_interesting_moves::move_to_right(trajectory_msgs::JointTrajectory &des_t
     // here is a "goal" object compatible with the server, as defined in example_action_server/action
 }
 
-void My_interesting_moves::move_to_centerbehind(trajectory_msgs::JointTrajectory &des_trajectory) {
+void My_interesting_moves::move_to_centerfront(trajectory_msgs::JointTrajectory &des_trajectory) {
     int g_count = 0;
     Vectorq7x1 q_pre_pose;
     Eigen::VectorXd q_in_vecxd;
@@ -519,10 +522,11 @@ void My_interesting_moves::move_to_centerbehind(trajectory_msgs::JointTrajectory
     q_in_vecxd = q_vec_right_arm; // start from here;
     des_path.push_back(q_in_vecxd); //put all zeros here
 
-    q_pre_pose<< 0.8, -0.6, 0, 1.5, 0, 0.6, 0;
-    q_in_vecxd = q_pre_pose;  // conversion;
-    des_path.push_back(q_in_vecxd);  //twice, to define a trajectory
-    q_pre_pose<< 0.8, -0.6, 0, 2, 0, 0.6, 0;
+    // q_pre_pose<< 0.8, -0.6, 0, 1.5, 0, 0.6, 0;
+    // q_in_vecxd = q_pre_pose;  // conversion;
+    // des_path.push_back(q_in_vecxd);  //twice, to define a trajectory
+    // q_pre_pose<< 0.8, -0.6, 0, 2, 0, 0.6, 0;
+    q_pre_pose<< 0.9, -0.8, 0.8, 1.5, 0, 2, 0;
     q_in_vecxd = q_pre_pose;  // conversion;
     des_path.push_back(q_in_vecxd);  // twice, to define a trajectory
 
@@ -549,10 +553,11 @@ void My_interesting_moves::move_to_leftbehind(trajectory_msgs::JointTrajectory &
     q_in_vecxd = q_vec_right_arm; // start from here;
     des_path.push_back(q_in_vecxd); //put all zeros here
 
-    q_pre_pose<< 1.2, -0.8, 0, 1.5, 0.6, 0.4, 0;
-    q_in_vecxd = q_pre_pose;  // conversion;
-    des_path.push_back(q_in_vecxd);  //twice, to define a trajectory
-    q_pre_pose<< 1.2, -0.4, 0, 1.5, 0.6, 1, 0;
+    // q_pre_pose<< 1.2, -0.8, 0, 1.5, 0.6, 0.4, 0;
+    // q_in_vecxd = q_pre_pose;  // conversion;
+    // des_path.push_back(q_in_vecxd);  //twice, to define a trajectory
+    // q_pre_pose<< 1.2, -0.4, 0, 1.5, 0.6, 1, 0;
+    q_pre_pose<< 0.9, -0.8, 0.8, 1.5, 0, 1, 0;
     q_in_vecxd = q_pre_pose;  // conversion;
     des_path.push_back(q_in_vecxd);  // twice, to define a trajectory
 
@@ -579,10 +584,11 @@ void My_interesting_moves::move_to_rightbehind(trajectory_msgs::JointTrajectory 
     q_in_vecxd = q_vec_right_arm; // start from here;
     des_path.push_back(q_in_vecxd); //put all zeros here
 
-    q_pre_pose<< 0.4, -0.8, 0, 1.5, -0.6, 0.4, 0;
-    q_in_vecxd = q_pre_pose;  // conversion;
-    des_path.push_back(q_in_vecxd);  //twice, to define a trajectory
-    q_pre_pose<< 0.4, -0.4, 0, 1.5, -0.6, 1, 0;
+    // q_pre_pose<< 0.4, -0.8, 0, 1.5, -0.6, 0.4, 0;
+    // q_in_vecxd = q_pre_pose;  // conversion;
+    // des_path.push_back(q_in_vecxd);  //twice, to define a trajectory
+    // q_pre_pose<< 0.4, -0.4, 0, 1.5, -0.6, 1, 0;
+    q_pre_pose<< 0.7, -0.8, -0.2, 1.5, 0, 1.5, 0;
     q_in_vecxd = q_pre_pose;  // conversion;
     des_path.push_back(q_in_vecxd);  // twice, to define a trajectory
 

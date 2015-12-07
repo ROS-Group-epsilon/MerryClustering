@@ -248,24 +248,19 @@ int main(int argc, char** argv) {
 			//std::cin>>color;
 			// depending on color of block, will assign a different goal destination
 			if(color == 0 /*MerryPclutils::COLORS::RED*/) {
-				q_vec_pose << 0.8, -0.3, 0, 1, 0, 0.8, 0; //move to center
-
+				q_vec_pose << 1.1, -0.5, 0, 0.7, 0, 1.3, 0;//move to center
 			} else if(color == 1 /*MerryPclutils::COLORS::GREEN*/) {
-				q_vec_pose << 1.2, -0.2, 0, 0.8, 0, 0.8, 0; //move to left
-
+				q_vec_pose << 1.4, -0.5, 0, 0.8, 0.2, 1, 0; //move to left
 			} else if(color == 2 /*MerryPclutils::COLORS::BLUE*/) {
-				q_vec_pose << 0.4, -0.2, 0, 0.8, 0, 0.8, 0; //move to right
-
+				q_vec_pose << 0.8, -0.5, 0, 0.8, 0, 1.2, 0; //move to right
 			} else if(color == 3 /*MerryPclutils::COLORS::BLACK*/) {
-				q_vec_pose << 0.8, -0.6, 0, 2, 0, 0.6, 0; //move to center behind
-
+				q_vec_pose << 0.9, -0.8, 0.8, 1.5, 0, 2, 0; //move to center behind
 			} else if(color == 4 /*MerryPclutils::COLORS::WHITE*/) {
-				q_vec_pose << 1.2, -0.4, 0, 1.5, 0.6, 1, 0; //move to left behind
-
+				q_vec_pose << 0.9, -0.8, 0.8, 1.5, 0, 1, 0; //move to left behind
 			} else if(color == 5 /*MerryPclutils::COLORS::WOODCOLOR*/) {
-				q_vec_pose << 0.4, -0.4, 0, 1.5, -0.6, 1, 0; //move to right behind
-			} else if (color == 6){
-				q_vec_pose <<  1.2, -0.2, 0, 0.8, 0, 0.8, 0;
+				q_vec_pose << 0.7, -0.8, -0.2, 1.5, 0, 1.5, 0; //move to right behind
+			// } else if (color == 6){
+			// 	q_vec_pose <<  0.7, -0.8, -0.2, 1.5, 0, 1.5, 0;
 			} else {
 				ROS_WARN("Color of block could not be determined.");
 				//ros::Duration(0.5).sleep();

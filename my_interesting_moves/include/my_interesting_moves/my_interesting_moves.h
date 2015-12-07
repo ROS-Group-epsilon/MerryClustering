@@ -59,7 +59,7 @@ public:
     void move_to_center(trajectory_msgs::JointTrajectory &des_trajectory);
     void move_to_left(trajectory_msgs::JointTrajectory &des_trajectory);
     void move_to_right(trajectory_msgs::JointTrajectory &des_trajectory);
-    void move_to_centerbehind(trajectory_msgs::JointTrajectory &des_trajectory);
+    void move_to_centerfront(trajectory_msgs::JointTrajectory &des_trajectory);
     void move_to_leftbehind(trajectory_msgs::JointTrajectory &des_trajectory);
     void move_to_rightbehind(trajectory_msgs::JointTrajectory &des_trajectory);
 
