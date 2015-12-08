@@ -14,13 +14,10 @@
 <!-- enable the robot for motion commands-->
 <node pkg="baxter_tools" type = "enable_robot.py" name="enable_robot" args="-e"/>
 
-<!-- after robot is running and enabled, start up these nodes -->
-<!-- tool transform publisher -->
-<include file ="$(find cwru_baxter_launch)/yale_gripper_xform.launch"/>
 
 <!--careful; need to use the right Kinect transform for real vs simulated robot -->
 <!-- the following is for the simulated robot -->
-<include file ="$(find cwru_baxter_sim)/kinect_xform.launch"/>
+<include file ="$(find cwru_baxter_launch)/kinect.launch"/>
 
 <!-- trajectory interpolator action server: -->
 <node pkg="baxter_traj_streamer" type="traj_interpolator_as" name="traj_interpolator_as"/>
@@ -28,10 +25,10 @@
 <!-- Cartesian motion action server -->
 <node pkg="baxter_cartesian_moves" type="baxter_cart_move_as" name="baxter_cart_move_as"/>
 
+<!-- gripper: -->
+<node pkg="baxter_gripper" type="dynamixel_motor_node" name="dynamixel_motor_node"/>
+
 <!-- rviz -->
 <node pkg="rviz" type="rviz" name="rviz"/>
-
-<!--the merry_motionplanner node -->
-<node pkg="merry_coordinator" type="merry_coordinator_main" name="merry_coordinator_main"/>
 
 </launch>

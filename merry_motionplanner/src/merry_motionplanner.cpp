@@ -325,7 +325,7 @@ Eigen::Vector3d MerryMotionplanner::compute_origin_des(Eigen::Vector3f centroid)
     }
     origin_des[0] += 0; // 
     origin_des[1] -= 0; // 
-    origin_des[2] += 0.125; // raise up hand
+    origin_des[2] += 0.1; // raise up hand
     return origin_des;
 }
 

@@ -3,6 +3,7 @@
 
 #include <ros/ros.h>
 #include <std_msgs/Int16.h>
+#include <std_msgs/Bool.h>
 #include <math.h>
 
 class MerryGripper {
@@ -15,6 +16,7 @@ public:
 private:
 	ros::NodeHandle nh_;
 	ros::Publisher dyn_pub_;
+	ros::Publisher gripper_cmd_;
 
 	void initialize_motor();
 };

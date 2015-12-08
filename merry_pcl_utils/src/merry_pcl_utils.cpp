@@ -144,6 +144,10 @@ Eigen::Vector3f MerryPclutils::get_top_point(pcl::PointCloud<pcl::PointXYZ>::Ptr
     //Eigen::Vector3f centroid = compute_centroid(inputCloud);
 	for(int i = 0; i < npts; i++){
         pt = inputCloud->points[i];
+        // pt.x = inputCloud->points[i].getVector3fMap()[0];
+        // pt.y = inputCloud->points[i].getVector3fMap()[1];
+        // pt.z = inputCloud->points[i].getVector3fMap()[2];
+        // cout<<"top_height = "<< pt.z <<endl;
 		if(pt.z > top_height) {
             if(pt.z > -0.6 && pt.z < 0 && pt.x < 1.2 && pt.x > 0.4 && pt.y < 0.3 && pt.y > -0.3) { // limited radius
                 //cout<<i<<endl;
@@ -194,9 +198,9 @@ void MerryPclutils::extract_coplanar_pcl_operation(Eigen::Vector3f pt) {
         //if(pclTransformed_ptr_->points[i].y > -0.3 && pclTransformed_ptr_->points[i].y < 0.3) { // for determining the z radius
         //if(pclTransformed_ptr_->points[i].z > -0.6 && pclTransformed_ptr_->points[i].z < 0) { // for determining the z radius
             //cout << "height of centroid = " << centroid[2] << endl;
-            cout << "the height of point " << i << "= " << pclTransformed_ptr_->points[i].getVector3fMap()[2] << endl;
+            //cout << "the height of point " << i << "= " << pclTransformed_ptr_->points[i].getVector3fMap()[2] << endl;
             pclGenPurposeCloud_ptr_->points.push_back(pclTransformed_ptr_->points[i]);
-        }  
+        }
     }
 
     pclGenPurposeCloud_ptr_->header = pclTransformedExtractedPoints_ptr_->header;
@@ -255,9 +259,9 @@ int MerryPclutils::detect_color(Eigen::Vector3d pt_color) {//, double color_matc
     } else if (diff > (normalized_white_color-pt_color).norm() && temp[0] > 150 && temp[1] > 150 && temp[2] > 150) {
         diff = (normalized_white_color-pt_color).norm();
         final_color = WHITE;
-    } else if (diff > (normalized_woodcolor_color-pt_color).norm()) {
-        diff = (normalized_woodcolor_color-pt_color).norm();
-        final_color = WOODCOLOR;
+    // } else if (diff > (normalized_woodcolor_color-pt_color).norm()) {
+    //     diff = (normalized_woodcolor_color-pt_color).norm();
+    //     final_color = WOODCOLOR;
     }
 
     if ((normalized_black_color-pt_color).norm() < color_match_thresh && temp[0] < 90 && temp[1] < 90 && temp[2] < 90) {

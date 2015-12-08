@@ -158,8 +158,8 @@ int main(int argc, char** argv) {
     //check_height_of_each_point(merry_pcl_utils, transformed_kinect_cloud);
 
     // extract top plane of the block and store it in pclGenPurposeCloud_ptr_ which is private
-    //merry_pcl_utils.extract_coplanar_pcl_operation(init_pt);
-    merry_pcl_utils.extract_coplanar_pcl_operation(centroid); // test for dermining the radius
+    merry_pcl_utils.extract_coplanar_pcl_operation(init_pt);
+    //merry_pcl_utils.extract_coplanar_pcl_operation(centroid); // test for dermining the radius
     // output it to DisplayCloud
     merry_pcl_utils.get_general_purpose_cloud(DisplayCloud);
     extracted_plane = merry_pcl_utils.getGenPurposeCloud();
@@ -175,7 +175,8 @@ int main(int argc, char** argv) {
 
     
     // match colored points in kinect colored cloud
-    determine_block_color(merry_pcl_utils, init_pt[2], centroid);
+    int color = determine_block_color(merry_pcl_utils, init_pt[2], centroid);
+    //if(color == 6) {cout<<"give up"<<endl; break;}
 
 
     // publish cloud

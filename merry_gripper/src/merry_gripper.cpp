@@ -1,6 +1,7 @@
 
 #include <merry_gripper/merry_gripper.h>
 
+
 MerryGripper::MerryGripper(ros::NodeHandle* nodehandle):
 		nh_(*nodehandle){
 	// initialize ... 
@@ -17,33 +18,43 @@ void MerryGripper::initialize_motor() {
     ROS_INFO("using command topic: %s",cmd_topic_name);
 
     dyn_pub_ = nh_.advertise<std_msgs::Int16>(cmd_topic_name, 1);
+    gripper_cmd_ = nh_.advertise<std_msgs::Bool>("gripper_cmd", 1);
 }
 
 void MerryGripper::grasp() {
-    std_msgs::Int16 int_angle;
-    int_angle.data = 3800.0;
+    // std_msgs::Int16 int_angle;
+    // int_angle.data = 3800.0;
 
-    ros::Time begin = ros::Time::now();
-    ros::Time current;
-    while(current.toSec() - begin.toSec() < 0.5) {
-    	dyn_pub_.publish(int_angle);
-        ros::Duration(0.05).sleep();
-        current = ros::Time::now();
-    }
+    // ros::Time begin = ros::Time::now();
+    // ros::Time current;
+    // while(current.toSec() - begin.toSec() < 0.5) {
+    // 	dyn_pub_.publish(int_angle);
+    //     ros::Duration(0.05).sleep();
+    //     current = ros::Time::now();
+    // }
+    std_msgs::Bool cmd_grasp;
+    cmd_grasp.data = 1;
+    gripper_cmd_.publish(cmd_grasp);
+    ros::Duration(2).sleep();
     ROS_INFO("grasped!");
 }
 
 void MerryGripper::release() {
-    std_msgs::Int16 int_angle;
-    int_angle.data = 3000.0;
+    // std_msgs::Int16 int_angle;
+    // int_angle.data = 3000.0;
 
-    ros::Time begin = ros::Time::now();
-    ros::Time current;
-    while(current.toSec() - begin.toSec() < 0.5) {
-    	dyn_pub_.publish(int_angle);
-        ros::Duration(0.05).sleep();
-        current = ros::Time::now();
-    }
+    // //rostopic pub gripper_cmd std_msgs/Bool 0
+    // ros::Time begin = ros::Time::now();
+    // ros::Time current;
+    // while(current.toSec() - begin.toSec() < 0.5) {
+    // 	dyn_pub_.publish(int_angle);
+    //     ros::Duration(0.05).sleep();
+    //     current = ros::Time::now();
+    // }
+    std_msgs::Bool cmd_release;
+    cmd_release.data = 0;
+    gripper_cmd_.publish(cmd_release);
+    ros::Duration(2).sleep();
     ROS_INFO("released!");
 }
 

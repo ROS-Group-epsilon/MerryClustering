@@ -129,8 +129,8 @@ int main(int argc, char** argv) {
 	while(tferr) {
 		tferr = false;
 		try {
-			tf_listener.lookupTransform("torso", "kinect_pc_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
-			//tf_listener.lookupTransform("torso", "camera_rgb_optical_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
+			//tf_listener.lookupTransform("torso", "kinect_pc_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
+			tf_listener.lookupTransform("torso", "camera_rgb_optical_frame", ros::Time(0), tf_sensor_frame_to_torso_frame);
 		} catch(tf::TransformException &exception) {
 			ROS_ERROR("%s", exception.what());
 			tferr = true;
@@ -188,7 +188,7 @@ int main(int argc, char** argv) {
 		merry_pcl_utils.transform_kinect_cloud(A_sensor_wrt_torso);
 		transformed_kinect_cloud = merry_pcl_utils.getTransformedKinectCloud();
 		init_pt = merry_pcl_utils.get_top_point(transformed_kinect_cloud);
-		ros::Duration(1.0).sleep();
+		//ros::Duration(1.0).sleep();
 
 		if(merry_pcl_utils.isBlockExist() /* && !merry_hmi.isObstructed() */) {
 			ROS_INFO("block has been found");
@@ -214,9 +214,27 @@ int main(int argc, char** argv) {
             //input: centroid, plane_normal, major_axis
             //output: Rmat, origin_des
             origin_des = merry_motionplanner.compute_origin_des(centroid);
+            origin_des[2] += 0.07;
             Rmat = merry_motionplanner.compute_orientation(plane_normal, major_axis);
 
             //construct a goal affine pose:
+            Affine_des_gripper = merry_motionplanner.construct_affine_pose(Rmat, origin_des);
+
+			rt_tool_pose.pose = merry_motionplanner.transformEigenAffine3dToPose(Affine_des_gripper);
+
+
+			rtn_val = merry_motionplanner.rt_arm_plan_path_current_to_goal_pose(rt_tool_pose);
+			if(rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
+				rtn_val = merry_motionplanner.rt_arm_execute_planned_path();
+				ros::Duration(2).sleep();
+			} else {
+				ROS_WARN("Cartesian path to desired pose is not achievable.");
+				//ros::Duration(1).sleep();
+				continue;
+			}
+
+			origin_des[2] -= 0.1;
+			//construct a goal affine pose:
             Affine_des_gripper = merry_motionplanner.construct_affine_pose(Rmat, origin_des);
 
 			rt_tool_pose.pose = merry_motionplanner.transformEigenAffine3dToPose(Affine_des_gripper);
@@ -225,7 +243,7 @@ int main(int argc, char** argv) {
 			rtn_val = merry_motionplanner.rt_arm_plan_path_current_to_goal_pose(rt_tool_pose);
 			if(rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
 				rtn_val = merry_motionplanner.rt_arm_execute_planned_path();
-				ros::Duration(0.5).sleep();
+				ros::Duration(2).sleep();
 			} else {
 				ROS_WARN("Cartesian path to desired pose is not achievable.");
 				//ros::Duration(1).sleep();
@@ -246,19 +264,64 @@ int main(int argc, char** argv) {
     		int color = determine_block_color(merry_pcl_utils, init_pt[2], centroid);
 			//int color = merry_pcl_utils.detect_color(avg_color);
 			//std::cin>>color;
+
+			// // depending on color of block, will assign a different goal destination
+			// if(color == 0 /*MerryPclutils::COLORS::RED*/) {
+			// 	q_vec_pose << 1.1, -0.6, 0, 0.7, 0, 1.3, 0;//move to center
+			// } else if(color == 1 /*MerryPclutils::COLORS::GREEN*/) {
+			// 	q_vec_pose << 1.4, -0.6, 0, 0.8, 0.2, 1, 0; //move to left
+			// } else if(color == 2 /*MerryPclutils::COLORS::BLUE*/) {
+			// 	q_vec_pose << 0.8, -0.6, 0, 0.8, 0, 1.2, 0; //move to right
+			// } else if(color == 3 /*MerryPclutils::COLORS::BLACK*/) {
+			// 	q_vec_pose << 0.9, -0.9, 0.8, 1.5, 0, 2, 0; //move to center behind
+			// } else if(color == 4 /*MerryPclutils::COLORS::WHITE*/) {
+			// 	q_vec_pose << 0.9, -0.9, 0.8, 1.5, 0, 1, 0; //move to left behind
+			// } else if(color == 5 /*MerryPclutils::COLORS::WOODCOLOR*/) {
+			// 	q_vec_pose << 0.7, -0.9, -0.2, 1.5, 0, 1.5, 0; //move to right behind
+			// // } else if (color == 6){
+			// // 	q_vec_pose <<  0.7, -0.8, -0.2, 1.5, 0, 1.5, 0;
+			// } else {
+			// 	ROS_WARN("Color of block could not be determined.");
+			// 	//ros::Duration(0.5).sleep();
+			// 	continue;
+			// }
+			
+			// // plan path to goal destination that was determined above
+			// // execute motion if path was determined to be successful
+			// rtn_val = merry_motionplanner.rt_arm_plan_jspace_path_current_to_qgoal(q_vec_pose);
+			// if (rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
+			// 	rtn_val = merry_motionplanner.rt_arm_execute_planned_path();
+			// 	ros::Duration(0.5).sleep();
+			// } else {
+			// 	ROS_WARN("Joint space path to desired pose is not achievable.");
+			// 	//ros::Duration(100).sleep();
+			// 	continue;
+			// }
+
+
+			rtn_val = merry_motionplanner.plan_move_to_pre_pose();
+			if(rtn_val == cwru_action::cwru_baxter_cart_moveResult::SUCCESS) {
+				rtn_val = merry_motionplanner.rt_arm_execute_planned_path();
+				ros::Duration(0.5).sleep();
+			} else {
+				ROS_WARN("Move to pre pose is not achievable.");
+				continue;
+			}
+
+
 			// depending on color of block, will assign a different goal destination
 			if(color == 0 /*MerryPclutils::COLORS::RED*/) {
-				q_vec_pose << 1.1, -0.5, 0, 0.7, 0, 1.3, 0;//move to center
+				q_vec_pose << 1.1, -0.6, 0, 0.7, 0, 1.3, 0;//move to center
 			} else if(color == 1 /*MerryPclutils::COLORS::GREEN*/) {
-				q_vec_pose << 1.4, -0.5, 0, 0.8, 0.2, 1, 0; //move to left
+				q_vec_pose << 1.4, -0.6, 0, 0.8, 0.2, 1, 0; //move to left
 			} else if(color == 2 /*MerryPclutils::COLORS::BLUE*/) {
-				q_vec_pose << 0.8, -0.5, 0, 0.8, 0, 1.2, 0; //move to right
+				q_vec_pose << 0.8, -0.6, 0, 0.8, 0, 1.2, 0; //move to right
 			} else if(color == 3 /*MerryPclutils::COLORS::BLACK*/) {
-				q_vec_pose << 0.9, -0.8, 0.8, 1.5, 0, 2, 0; //move to center behind
+				q_vec_pose << 0.9, -0.9, 0.8, 1.5, 0, 2, 0; //move to center behind
 			} else if(color == 4 /*MerryPclutils::COLORS::WHITE*/) {
-				q_vec_pose << 0.9, -0.8, 0.8, 1.5, 0, 1, 0; //move to left behind
+				q_vec_pose << 0.9, -0.9, 0.8, 1.5, 0, 1, 0; //move to left behind
 			} else if(color == 5 /*MerryPclutils::COLORS::WOODCOLOR*/) {
-				q_vec_pose << 0.7, -0.8, -0.2, 1.5, 0, 1.5, 0; //move to right behind
+				q_vec_pose << 0.7, -0.9, -0.2, 1.5, 0, 1.5, 0; //move to right behind
 			// } else if (color == 6){
 			// 	q_vec_pose <<  0.7, -0.8, -0.2, 1.5, 0, 1.5, 0;
 			} else {
